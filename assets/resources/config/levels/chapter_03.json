@@ -1,0 +1,226 @@
+{
+  "chapterId": 3,
+  "chapterName": "challenge",
+  "levels": [
+    {
+      "id": 301,
+      "chapterId": 3,
+      "numbers": [
+        1,
+        11,
+        13,
+        13
+      ],
+      "answerExpression": "(13*(1+(11/13)))"
+    },
+    {
+      "id": 302,
+      "chapterId": 3,
+      "numbers": [
+        1,
+        11,
+        11,
+        13
+      ],
+      "answerExpression": "(11*(1+(13/11)))"
+    },
+    {
+      "id": 303,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        12,
+        13,
+        13
+      ],
+      "answerExpression": "(13*(2/(13/12)))"
+    },
+    {
+      "id": 304,
+      "chapterId": 3,
+      "numbers": [
+        3,
+        7,
+        9,
+        13
+      ],
+      "answerExpression": "(9*(7-(13/3)))"
+    },
+    {
+      "id": 305,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        2,
+        13,
+        13
+      ],
+      "answerExpression": "(13*(2-(2/13)))"
+    },
+    {
+      "id": 306,
+      "chapterId": 3,
+      "numbers": [
+        5,
+        5,
+        10,
+        13
+      ],
+      "answerExpression": "(10*(5-(13/5)))"
+    },
+    {
+      "id": 307,
+      "chapterId": 3,
+      "numbers": [
+        11,
+        12,
+        13,
+        13
+      ],
+      "answerExpression": "(13-(11/(12-13)))"
+    },
+    {
+      "id": 308,
+      "chapterId": 3,
+      "numbers": [
+        12,
+        12,
+        12,
+        13
+      ],
+      "answerExpression": "(12-(12/(12-13)))"
+    },
+    {
+      "id": 309,
+      "chapterId": 3,
+      "numbers": [
+        11,
+        11,
+        12,
+        13
+      ],
+      "answerExpression": "(13-(11/(11-12)))"
+    },
+    {
+      "id": 310,
+      "chapterId": 3,
+      "numbers": [
+        10,
+        11,
+        11,
+        13
+      ],
+      "answerExpression": "(13-(11/(10-11)))"
+    },
+    {
+      "id": 311,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        7,
+        12,
+        13
+      ],
+      "answerExpression": "(12/(7-(13/2)))"
+    },
+    {
+      "id": 312,
+      "chapterId": 3,
+      "numbers": [
+        4,
+        9,
+        9,
+        12
+      ],
+      "answerExpression": "(9*(4-(12/9)))"
+    },
+    {
+      "id": 313,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        6,
+        12,
+        13
+      ],
+      "answerExpression": "(12/((13/2)-6))"
+    },
+    {
+      "id": 314,
+      "chapterId": 3,
+      "numbers": [
+        3,
+        8,
+        13,
+        13
+      ],
+      "answerExpression": "(13*(8/(13/3)))"
+    },
+    {
+      "id": 315,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        8,
+        9,
+        13
+      ],
+      "answerExpression": "(9/(2-(13/8)))"
+    },
+    {
+      "id": 316,
+      "chapterId": 3,
+      "numbers": [
+        3,
+        9,
+        11,
+        11
+      ],
+      "answerExpression": "(11*(3-(9/11)))"
+    },
+    {
+      "id": 317,
+      "chapterId": 3,
+      "numbers": [
+        5,
+        6,
+        10,
+        12
+      ],
+      "answerExpression": "(5*(6-(12/10)))"
+    },
+    {
+      "id": 318,
+      "chapterId": 3,
+      "numbers": [
+        1,
+        8,
+        12,
+        12
+      ],
+      "answerExpression": "(12/((12/8)-1))"
+    },
+    {
+      "id": 319,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        8,
+        12,
+        12
+      ],
+      "answerExpression": "(12/(2-(12/8)))"
+    },
+    {
+      "id": 320,
+      "chapterId": 3,
+      "numbers": [
+        4,
+        6,
+        13,
+        13
+      ],
+      "answerExpression": "(13*(6/(13/4)))"
+    }
+  ]
+}

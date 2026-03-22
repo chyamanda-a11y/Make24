@@ -1,0 +1,226 @@
+{
+  "chapterId": 1,
+  "chapterName": "beginner",
+  "levels": [
+    {
+      "id": 101,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        2,
+        2,
+        3
+      ],
+      "answerExpression": "((2*2)*(2*3))"
+    },
+    {
+      "id": 102,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "answerExpression": "((1*2)*(3*4))"
+    },
+    {
+      "id": 103,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        2,
+        3,
+        3
+      ],
+      "answerExpression": "((1+3)*(2*3))"
+    },
+    {
+      "id": 104,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        2,
+        3,
+        3
+      ],
+      "answerExpression": "((2*2)*(3+3))"
+    },
+    {
+      "id": 105,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        3,
+        3,
+        3
+      ],
+      "answerExpression": "((1+3)*(3+3))"
+    },
+    {
+      "id": 106,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        1,
+        3,
+        4
+      ],
+      "answerExpression": "((1+1)*(3*4))"
+    },
+    {
+      "id": 107,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        3,
+        4,
+        4
+      ],
+      "answerExpression": "((3*4)*(4-2))"
+    },
+    {
+      "id": 108,
+      "chapterId": 1,
+      "numbers": [
+        3,
+        3,
+        4,
+        5
+      ],
+      "answerExpression": "((3*4)*(5-3))"
+    },
+    {
+      "id": 109,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        2,
+        3,
+        6
+      ],
+      "answerExpression": "((2*3)*(6-2))"
+    },
+    {
+      "id": 110,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        1,
+        5,
+        6
+      ],
+      "answerExpression": "((1*6)*(5-1))"
+    },
+    {
+      "id": 111,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        3,
+        6,
+        6
+      ],
+      "answerExpression": "((2*6)*(6/3))"
+    },
+    {
+      "id": 112,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        2,
+        6,
+        8
+      ],
+      "answerExpression": "((1*6)*(8/2))"
+    },
+    {
+      "id": 113,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        3,
+        4,
+        9
+      ],
+      "answerExpression": "((2*4)*(9/3))"
+    },
+    {
+      "id": 114,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        3,
+        8,
+        9
+      ],
+      "answerExpression": "((1*8)*(9/3))"
+    },
+    {
+      "id": 115,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        2,
+        2,
+        4
+      ],
+      "answerExpression": "((1+2)*(2*4))"
+    },
+    {
+      "id": 116,
+      "chapterId": 1,
+      "numbers": [
+        2,
+        2,
+        2,
+        4
+      ],
+      "answerExpression": "((2*2)*(2+4))"
+    },
+    {
+      "id": 117,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        2,
+        4,
+        4
+      ],
+      "answerExpression": "((1*4)*(2+4))"
+    },
+    {
+      "id": 118,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        3,
+        3,
+        4
+      ],
+      "answerExpression": "((1*4)*(3+3))"
+    },
+    {
+      "id": 119,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        2,
+        2,
+        6
+      ],
+      "answerExpression": "((1*2)*(2*6))"
+    },
+    {
+      "id": 120,
+      "chapterId": 1,
+      "numbers": [
+        1,
+        3,
+        4,
+        4
+      ],
+      "answerExpression": "((1*3)*(4+4))"
+    }
+  ]
+}
