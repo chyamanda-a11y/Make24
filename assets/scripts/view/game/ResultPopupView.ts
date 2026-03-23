@@ -1,27 +1,52 @@
-import { _decorator, Component, Label } from 'cc';
+import { _decorator, Button, Component, Label } from 'cc';
 
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 @ccclass('ResultPopupView')
 export class ResultPopupView extends Component {
-    @property(Label)
-    private readonly titleLabel: Label | null = null;
+    private titleLabel: Label | null = null;
+    private nextButton: Button | null = null;
+    private nextButtonLabel: Label | null = null;
 
     public onNextTap: (() => void) | null = null;
-    public onReplayTap: (() => void) | null = null;
 
     protected onLoad(): void {
+        this.titleLabel = this.node.getChildByName('title')?.getComponent(Label) ?? null;
+        this.nextButton = this.node.getChildByName('Button')?.getComponent(Button) ?? null;
+        this.nextButtonLabel = this.node.getChildByName('Button')?.getChildByName('Label')?.getComponent(Label) ?? null;
+
         if (!this.titleLabel) {
             throw new Error('ResultPopupView: titleLabel is not assigned');
         }
+
+        if (!this.nextButton) {
+            throw new Error('ResultPopupView: nextButton is not assigned');
+        }
+
+        if (!this.nextButtonLabel) {
+            throw new Error('ResultPopupView: nextButtonLabel is not assigned');
+        }
     }
 
-    public show(title: string): void {
+    protected onEnable(): void {
+        this.nextButton?.node.on(Button.EventType.CLICK, this.handleNextButton, this);
+    }
+
+    protected onDisable(): void {
+        this.nextButton?.node.off(Button.EventType.CLICK, this.handleNextButton, this);
+    }
+
+    public show(title: string, nextButtonText: string = '下一关'): void {
         if (!this.titleLabel) {
             throw new Error('ResultPopupView.show: titleLabel is not assigned');
         }
 
+        if (!this.nextButtonLabel) {
+            throw new Error('ResultPopupView.show: nextButtonLabel is not assigned');
+        }
+
         this.titleLabel.string = title;
+        this.nextButtonLabel.string = nextButtonText;
         this.node.active = true;
     }
 
@@ -31,9 +56,5 @@ export class ResultPopupView extends Component {
 
     public handleNextButton(): void {
         this.onNextTap?.();
-    }
-
-    public handleReplayButton(): void {
-        this.onReplayTap?.();
     }
 }

@@ -4,7 +4,7 @@ import { StepRecordModel } from './StepRecordModel';
 
 export class GameModel {
     public currentLevel: LevelModel | null = null;
-    public currentNumbers: number[] = [];
+    public currentNumbers: Array<number | null> = [];
     public selectedNumberIndices: number[] = [];
     public selectedOperator: OperatorSymbol | null = null;
     public stepHistory: StepRecordModel[] = [];
@@ -19,5 +19,13 @@ export class GameModel {
         this.stepHistory = [];
         this.hasUsedAnswer = false;
         this.hasCompletedLevel = false;
+    }
+
+    public getActiveNumberCount(): number {
+        return this.currentNumbers.reduce((count, value) => count + (value === null ? 0 : 1), 0);
+    }
+
+    public getFirstActiveNumberIndex(): number {
+        return this.currentNumbers.findIndex((value) => value !== null);
     }
 }

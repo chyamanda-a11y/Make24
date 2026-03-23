@@ -31,6 +31,10 @@ export class GameController {
             return;
         }
 
+        if (this.model.currentNumbers[index] === null) {
+            return;
+        }
+
         if (this.model.selectedNumberIndices.length === 0) {
             this.model.selectedNumberIndices = [index];
             return;
@@ -124,6 +128,12 @@ export class GameController {
 
         const leftValue = this.model.currentNumbers[firstIndex];
         const rightValue = this.model.currentNumbers[secondIndex];
+
+        if (leftValue === null || rightValue === null) {
+            this.clearSelection();
+            return;
+        }
+
         const mergedValue = this.calculateResult(leftValue, rightValue, operator);
 
         if (mergedValue === null) {
@@ -132,16 +142,18 @@ export class GameController {
 
         this.pushStepRecord(this.createSnapshot());
 
-        const [leftIndex, rightIndex] = [firstIndex, secondIndex].sort((a, b) => a - b);
         const nextNumbers = [...this.model.currentNumbers];
 
-        nextNumbers[leftIndex] = mergedValue;
-        nextNumbers.splice(rightIndex, 1);
+        nextNumbers[firstIndex] = null;
+        nextNumbers[secondIndex] = mergedValue;
 
         this.model.currentNumbers = nextNumbers;
         this.clearSelection();
+
+        const remainingNumbers = nextNumbers.filter((value): value is number => value !== null);
+
         this.model.hasCompletedLevel =
-            nextNumbers.length === 1 && Math.abs(nextNumbers[0] - GOAL_VALUE) <= EPSILON;
+            remainingNumbers.length === 1 && Math.abs(remainingNumbers[0] - GOAL_VALUE) <= EPSILON;
     }
 
     private calculateResult(leftValue: number, rightValue: number, operator: OperatorSymbol): number | null {

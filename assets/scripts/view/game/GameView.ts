@@ -1,4 +1,4 @@
-import { _decorator, Button, Component, EventTouch, Node, Tween, tween, Vec3 } from 'cc';
+import { _decorator, Button, Component, EventTouch, Node, Prefab, Tween, instantiate, resources, tween, Vec3 } from 'cc';
 
 import { GameController } from '../../controller/game/GameController';
 import { LevelService } from '../../core/LevelService';
@@ -17,6 +17,8 @@ const FALLBACK_LEVEL: LevelModel = {
     answerExpression: '(6*2)*(6/2)',
 };
 
+const ANSWER_POPUP_PREFAB_PATH = 'prefabs/AnswerPopUI';
+const RESULT_POPUP_PREFAB_PATH = 'prefabs/ResultPupUI';
 const CONTROL_BUTTON_PRESS_SCALE = 0.94;
 const CONTROL_BUTTON_PRESS_DURATION = 0.08;
 const CONTROL_BUTTON_RELEASE_DURATION = 0.1;
@@ -38,12 +40,6 @@ export class GameView extends Component {
     @property(Node)
     private readonly tipButton: Node | null = null;
 
-    @property(Node)
-    private readonly answerPopup: Node | null = null;
-
-    @property(Node)
-    private readonly resultPopup: Node | null = null;
-
     @property({ type: String })
     private readonly levelFileName: string = 'chapter_01';
 
@@ -56,22 +52,21 @@ export class GameView extends Component {
     private tipButtonComponent: Button | null = null;
     private answerPopupView: AnswerPopupView | null = null;
     private resultPopupView: ResultPopupView | null = null;
-    private isResultPopupDismissed: boolean = false;
+    private chapterLevels: readonly LevelModel[] = [];
+    private currentLevelIndex: number = 0;
     private readonly controlButtonBaseScales: Map<Node, Vec3> = new Map();
 
     protected onLoad(): void {
         this.numPanelViews = this.resolveNumPanels();
         this.signPanelViews = this.resolveSignPanels();
         this.resolveControlButtons();
-        this.resolvePopupViews();
         this.validatePanelReferences();
-        this.hideTransientPopups();
         this.registerInteraction();
         this.refreshControlButtons();
     }
 
     protected start(): void {
-        void this.initializeLevel();
+        void this.initialize();
     }
 
     protected onDisable(): void {
@@ -79,24 +74,78 @@ export class GameView extends Component {
         this.resetControlButtonScales();
     }
 
-    private async initializeLevel(): Promise<void> {
-        const level = await this.loadInitialLevel();
+    private async initialize(): Promise<void> {
+        const [chapterLevels] = await Promise.all([
+            this.loadChapterLevels(),
+            this.initializePopupViews(),
+        ]);
 
-        this.isResultPopupDismissed = false;
+        this.chapterLevels = chapterLevels;
+        this.startLevelByIndex(0);
+    }
+
+    private async loadChapterLevels(): Promise<readonly LevelModel[]> {
+        try {
+            const config = await this.levelService.loadChapterConfig(this.levelFileName);
+
+            return config.levels.length > 0 ? config.levels : [FALLBACK_LEVEL];
+        } catch {
+            return [FALLBACK_LEVEL];
+        }
+    }
+
+    private async initializePopupViews(): Promise<void> {
+        const [answerPopupPrefab, resultPopupPrefab] = await Promise.all([
+            this.loadPrefab(ANSWER_POPUP_PREFAB_PATH),
+            this.loadPrefab(RESULT_POPUP_PREFAB_PATH),
+        ]);
+
+        const answerPopupNode = instantiate(answerPopupPrefab);
+        const resultPopupNode = instantiate(resultPopupPrefab);
+
+        answerPopupNode.setParent(this.node);
+        resultPopupNode.setParent(this.node);
+        answerPopupNode.setPosition(0, 0, 0);
+        resultPopupNode.setPosition(0, 0, 0);
+
+        this.answerPopupView = answerPopupNode.getComponent(AnswerPopupView) ?? answerPopupNode.addComponent(AnswerPopupView);
+        this.resultPopupView = resultPopupNode.getComponent(ResultPopupView) ?? resultPopupNode.addComponent(ResultPopupView);
+        this.resultPopupView.onNextTap = (): void => {
+            this.handleResultNextTap();
+        };
+
+        this.hideTransientPopups();
+    }
+
+    private async loadPrefab(resourcePath: string): Promise<Prefab> {
+        return await new Promise<Prefab>((resolve, reject) => {
+            resources.load(resourcePath, Prefab, (error, asset) => {
+                if (error) {
+                    reject(new Error(`GameView.loadPrefab failed: ${error.message}`));
+                    return;
+                }
+
+                if (!asset) {
+                    reject(new Error(`GameView.loadPrefab failed: prefab ${resourcePath} is missing`));
+                    return;
+                }
+
+                resolve(asset);
+            });
+        });
+    }
+
+    private startLevelByIndex(index: number): void {
+        const level = this.chapterLevels[index];
+
+        if (!level) {
+            throw new Error(`GameView.startLevelByIndex: level index ${index} is out of range`);
+        }
+
+        this.currentLevelIndex = index;
         this.hideTransientPopups();
         this.controller.startLevel(level);
         this.render();
-    }
-
-    private async loadInitialLevel(): Promise<LevelModel> {
-        try {
-            const config = await this.levelService.loadChapterConfig(this.levelFileName);
-            const level = config.levels[0];
-
-            return level ?? FALLBACK_LEVEL;
-        } catch {
-            return FALLBACK_LEVEL;
-        }
     }
 
     private validatePanelReferences(): void {
@@ -137,14 +186,6 @@ export class GameView extends Component {
         this.tipButton?.on(Node.EventType.TOUCH_CANCEL, this.handleControlButtonTouchCancel, this);
         this.tipButton?.on(Node.EventType.TOUCH_END, this.handleTipTap, this);
 
-        if (this.resultPopupView) {
-            this.resultPopupView.onReplayTap = (): void => {
-                this.handleResultReplayTap();
-            };
-            this.resultPopupView.onNextTap = (): void => {
-                this.handleResultNextTap();
-            };
-        }
     }
 
     private unregisterInteraction(): void {
@@ -171,27 +212,24 @@ export class GameView extends Component {
         this.tipButton?.off(Node.EventType.TOUCH_CANCEL, this.handleControlButtonTouchCancel, this);
         this.tipButton?.off(Node.EventType.TOUCH_END, this.handleTipTap, this);
 
-        if (this.resultPopupView) {
-            this.resultPopupView.onReplayTap = null;
-            this.resultPopupView.onNextTap = null;
-        }
     }
 
     private render(): void {
         const model = this.controller.getModel();
+        const finalNumberIndex = model.hasCompletedLevel ? model.getFirstActiveNumberIndex() : -1;
 
         this.numPanelViews.forEach((panel, index) => {
-            const value = model.currentNumbers[index];
+            const value = model.currentNumbers[index] ?? null;
             const isSelected = model.selectedNumberIndices.includes(index);
-            const isSolved = model.hasCompletedLevel && index === 0;
+            const isSolved = model.hasCompletedLevel && index === finalNumberIndex;
 
-            panel.render(value ?? null, isSelected, isSolved);
+            panel.render(value, isSelected, isSolved);
         });
 
         this.signPanelViews.forEach((panel) => {
             const operator = panel.getOperator();
             const isSelected = model.selectedOperator === operator;
-            const isEnabled = model.currentNumbers.length > 1;
+            const isEnabled = model.getActiveNumberCount() > 1;
 
             panel.render(isSelected, isEnabled);
         });
@@ -264,27 +302,6 @@ export class GameView extends Component {
         this.initializeControlButtonVisual(this.backOneButton, this.backOneButtonComponent);
         this.initializeControlButtonVisual(this.retryButton, this.retryButtonComponent);
         this.initializeControlButtonVisual(this.tipButton, this.tipButtonComponent);
-    }
-
-    private resolvePopupViews(): void {
-        if (!this.answerPopup) {
-            throw new Error('GameView: answerPopup is not assigned');
-        }
-
-        if (!this.resultPopup) {
-            throw new Error('GameView: resultPopup is not assigned');
-        }
-
-        this.answerPopupView = this.answerPopup.getComponent(AnswerPopupView);
-        this.resultPopupView = this.resultPopup.getComponent(ResultPopupView);
-
-        if (!this.answerPopupView) {
-            throw new Error('GameView: answerPopup is missing AnswerPopupView');
-        }
-
-        if (!this.resultPopupView) {
-            throw new Error('GameView: resultPopup is missing ResultPopupView');
-        }
     }
 
     private refreshControlButtons(): void {
@@ -377,23 +394,16 @@ export class GameView extends Component {
             if (this.resultPopupView.node.active) {
                 this.resultPopupView.hide();
             }
-
-            this.isResultPopupDismissed = false;
             return;
         }
 
         this.answerPopupView?.hide();
 
-        if (this.isResultPopupDismissed) {
-            if (this.resultPopupView.node.active) {
-                this.resultPopupView.hide();
-            }
-
-            return;
-        }
-
         if (!this.resultPopupView.node.active) {
-            this.resultPopupView.show('通关成功');
+            this.resultPopupView.show(
+                this.hasNextLevel() ? '恭喜通关' : '全部完成',
+                this.hasNextLevel() ? '下一关' : '重新开始',
+            );
         }
     }
 
@@ -451,7 +461,6 @@ export class GameView extends Component {
             return;
         }
 
-        this.isResultPopupDismissed = false;
         this.hideTransientPopups();
         this.controller.restartLevel();
         this.render();
@@ -466,15 +475,12 @@ export class GameView extends Component {
         this.answerPopupView.show(answerExpression);
     }
 
-    private handleResultReplayTap(): void {
-        this.isResultPopupDismissed = false;
-        this.hideTransientPopups();
-        this.controller.restartLevel();
-        this.render();
+    private hasNextLevel(): boolean {
+        return this.currentLevelIndex < this.chapterLevels.length - 1;
     }
 
     private handleResultNextTap(): void {
-        this.isResultPopupDismissed = true;
-        this.resultPopupView?.hide();
+        const nextLevelIndex = this.hasNextLevel() ? this.currentLevelIndex + 1 : 0;
+        this.startLevelByIndex(nextLevelIndex);
     }
 }

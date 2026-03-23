@@ -23,28 +23,40 @@ export class SignPanelView extends Component {
     public onTap: ((operator: OperatorSymbol) => void) | null = null;
 
     private signLabel: Label | null = null;
-    private backgroundSprite: Sprite | null = null;
+    private rootBackgroundSprite: Sprite | null = null;
+    private normalBackgroundNode: Node | null = null;
+    private selectedBackgroundNode: Node | null = null;
+    private normalBackgroundSprite: Sprite | null = null;
+    private selectedBackgroundSprite: Sprite | null = null;
     private button: Button | null = null;
     private isInteractable: boolean = true;
 
     protected onLoad(): void {
         this.signLabel = this.node.getChildByName('sign')?.getComponent(Label) ?? null;
-        this.backgroundSprite = this.node.getComponent(Sprite);
+        this.rootBackgroundSprite = this.node.getComponent(Sprite);
+        this.normalBackgroundNode = this.node.getChildByName('normalBg');
+        this.selectedBackgroundNode = this.node.getChildByName('selectedBg');
+        this.normalBackgroundSprite = this.normalBackgroundNode?.getComponent(Sprite) ?? null;
+        this.selectedBackgroundSprite = this.selectedBackgroundNode?.getComponent(Sprite) ?? null;
         this.button = this.node.getComponent(Button);
 
-        if (!this.signLabel || !this.backgroundSprite || !this.button) {
-            throw new Error('SignPanelView: sign label, sprite, or button is missing');
+        if (!this.signLabel || !this.button) {
+            throw new Error('SignPanelView: sign label or button is missing');
         }
 
-        this.signLabel.string = this.getOperator();
+        if (!this.rootBackgroundSprite && (!this.normalBackgroundSprite || !this.selectedBackgroundSprite)) {
+            throw new Error('SignPanelView: background sprites are missing');
+        }
+
+        this.signLabel.string = this.getDisplayOperator();
     }
 
     protected onEnable(): void {
-        this.node.on(Node.EventType.TOUCH_END, this.handleTap, this);
+        this.node.on(Button.EventType.CLICK, this.handleTap, this);
     }
 
     protected onDisable(): void {
-        this.node.off(Node.EventType.TOUCH_END, this.handleTap, this);
+        this.node.off(Button.EventType.CLICK, this.handleTap, this);
     }
 
     public getOperator(): OperatorSymbol {
@@ -63,19 +75,15 @@ export class SignPanelView extends Component {
     }
 
     public render(isSelected: boolean, isEnabled: boolean): void {
-        if (!this.signLabel || !this.backgroundSprite || !this.button) {
+        if (!this.signLabel || !this.button) {
             throw new Error('SignPanelView.render: panel references are missing');
         }
 
-        this.signLabel.string = this.getOperator();
+        this.signLabel.string = this.getDisplayOperator();
         this.isInteractable = isEnabled;
         this.button.interactable = isEnabled;
         this.node.setScale(isSelected ? 1.08 : 1, isSelected ? 1.08 : 1, 1);
-        this.backgroundSprite.color = isSelected
-            ? new Color(SELECTED_SIGN_COLOR.r, SELECTED_SIGN_COLOR.g, SELECTED_SIGN_COLOR.b, SELECTED_SIGN_COLOR.a)
-            : isEnabled
-              ? new Color(DEFAULT_SIGN_COLOR.r, DEFAULT_SIGN_COLOR.g, DEFAULT_SIGN_COLOR.b, DEFAULT_SIGN_COLOR.a)
-              : new Color(DISABLED_SIGN_COLOR.r, DISABLED_SIGN_COLOR.g, DISABLED_SIGN_COLOR.b, DISABLED_SIGN_COLOR.a);
+        this.renderBackground(isSelected, isEnabled);
     }
 
     private handleTap(): void {
@@ -84,5 +92,46 @@ export class SignPanelView extends Component {
         }
 
         this.onTap?.(this.getOperator());
+    }
+
+    private getDisplayOperator(): string {
+        switch (this.signType) {
+            case SignPanelType.Add:
+                return '+';
+            case SignPanelType.Subtract:
+                return '-';
+            case SignPanelType.Multiply:
+                return '×';
+            case SignPanelType.Divide:
+                return '÷';
+            default:
+                throw new Error(`SignPanelView.getDisplayOperator: unsupported sign type ${this.signType}`);
+        }
+    }
+
+    private renderBackground(isSelected: boolean, isEnabled: boolean): void {
+        if (this.normalBackgroundNode && this.selectedBackgroundNode && this.normalBackgroundSprite && this.selectedBackgroundSprite) {
+            const activeNode = isSelected ? this.selectedBackgroundNode : this.normalBackgroundNode;
+            const inactiveNode = isSelected ? this.normalBackgroundNode : this.selectedBackgroundNode;
+            const activeSprite = isSelected ? this.selectedBackgroundSprite : this.normalBackgroundSprite;
+            const inactiveSprite = isSelected ? this.normalBackgroundSprite : this.selectedBackgroundSprite;
+            const activeColor = isEnabled ? DEFAULT_SIGN_COLOR : DISABLED_SIGN_COLOR;
+
+            activeNode.active = true;
+            inactiveNode.active = false;
+            activeSprite.color = new Color(activeColor.r, activeColor.g, activeColor.b, activeColor.a);
+            inactiveSprite.color = new Color(DEFAULT_SIGN_COLOR.r, DEFAULT_SIGN_COLOR.g, DEFAULT_SIGN_COLOR.b, DEFAULT_SIGN_COLOR.a);
+            return;
+        }
+
+        if (!this.rootBackgroundSprite) {
+            throw new Error('SignPanelView.renderBackground: background sprites are missing');
+        }
+
+        this.rootBackgroundSprite.color = isSelected
+            ? new Color(SELECTED_SIGN_COLOR.r, SELECTED_SIGN_COLOR.g, SELECTED_SIGN_COLOR.b, SELECTED_SIGN_COLOR.a)
+            : isEnabled
+              ? new Color(DEFAULT_SIGN_COLOR.r, DEFAULT_SIGN_COLOR.g, DEFAULT_SIGN_COLOR.b, DEFAULT_SIGN_COLOR.a)
+              : new Color(DISABLED_SIGN_COLOR.r, DISABLED_SIGN_COLOR.g, DISABLED_SIGN_COLOR.b, DISABLED_SIGN_COLOR.a);
     }
 }

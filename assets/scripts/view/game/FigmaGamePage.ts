@@ -542,17 +542,18 @@ export class FigmaGamePage extends Component {
         const model = this.controller.getModel();
         const stepCount = model.currentLevel ? model.currentLevel.numbers.length - 1 : 3;
         const solvedCount = model.stepHistory.length;
+        const finalNumberIndex = model.hasCompletedLevel ? model.getFirstActiveNumberIndex() : -1;
 
         this.numberCards.forEach((card, index) => {
             const value = model.currentNumbers[index];
-            const isVisible = value !== undefined;
+            const isVisible = value !== undefined && value !== null;
             const isSelected = model.selectedNumberIndices.includes(index);
-            const isSolved = model.hasCompletedLevel && index === 0;
+            const isSolved = model.hasCompletedLevel && index === finalNumberIndex;
 
             card.node.active = isVisible;
             card.button.interactable = isVisible && !model.hasCompletedLevel;
 
-            if (!isVisible) {
+            if (value === undefined || value === null) {
                 return;
             }
 
@@ -583,7 +584,7 @@ export class FigmaGamePage extends Component {
 
         this.operatorButtons.forEach((operatorRef) => {
             const isSelected = model.selectedOperator === operatorRef.operator;
-            const isEnabled = model.currentNumbers.length > 1 && !model.hasCompletedLevel;
+            const isEnabled = model.getActiveNumberCount() > 1 && !model.hasCompletedLevel;
 
             operatorRef.button.interactable = isEnabled;
             this.drawCircle(
