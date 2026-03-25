@@ -1,21 +1,327 @@
-import { _decorator, Component, Node } from 'cc';
+import { _decorator, Color, Component, instantiate, Label, Node, Prefab, resources, Sprite } from 'cc';
+
+import {
+    ChapterController,
+    ChapterId,
+    ChapterLevelDisplayModel,
+} from '../../controller/chapter/ChapterController';
+import { ChapterLevelConfig, LevelService } from '../../core/LevelService';
+import { SaveService } from '../../core/SaveService';
+import { LevelItemRenderData, LevelItemView } from './LevelItemView';
 
 const { ccclass, property } = _decorator;
+const LEVEL_ITEM_PREFAB_PATH = 'prefabs/LevelItem';
+
+const COLORS = {
+    tabSelectedText: new Color(16, 31, 12, 255),
+    tabIdleText: new Color(176, 164, 114, 255),
+};
+
+interface ChapterTabView {
+    readonly chapterId: ChapterId;
+    readonly node: Node;
+    readonly selectedBackground: Sprite;
+    readonly icon: Sprite;
+    readonly label: Label;
+}
+
+export interface ChapterLevelSelection {
+    readonly chapterId: ChapterId;
+    readonly chapterFileName: string;
+    readonly levelId: number;
+    readonly levelIndex: number;
+}
 
 @ccclass('ChapterView')
 export class ChapterView extends Component {
-    @property(Node)
-    private readonly levelListRoot: Node | null = null;
+    @property({ type: [Node] })
+    private readonly tabButtons: Node[] = [];
 
-    public onLevelSelected: ((levelId: number) => void) | null = null;
+    @property(Label)
+    private readonly progressValueLabel: Label | null = null;
+
+    @property(Label)
+    private readonly progressSuffixLabel: Label | null = null;
+
+    @property(Node)
+    private readonly levelGridRoot: Node | null = null;
+
+    @property({ type: [Node] })
+    private readonly levelItemNodes: Node[] = [];
+
+    public onLevelSelected: ((selection: ChapterLevelSelection) => void) | null = null;
+
+    private readonly controller: ChapterController = new ChapterController();
+    private readonly levelService: LevelService = new LevelService();
+    private readonly saveService: SaveService = new SaveService();
+    private readonly levelSelections: Map<number, ChapterLevelSelection> = new Map();
+
+    private tabViews: ChapterTabView[] = [];
+    private levelItemSlots: Node[] = [];
+    private levelItemViews: LevelItemView[] = [];
+    private selectedChapterId: ChapterId = 1;
+    private renderVersion: number = 0;
+    private isInitialized: boolean = false;
+    private levelItemPrefabPromise: Promise<Prefab> | null = null;
 
     protected onLoad(): void {
-        if (!this.levelListRoot) {
-            throw new Error('ChapterView: levelListRoot is not assigned');
+        this.validateReferences();
+        this.resolveTabViews();
+    }
+
+    protected start(): void {
+        void this.initialize();
+    }
+
+    public refresh(): void {
+        if (!this.isInitialized) {
+            return;
+        }
+
+        void this.renderSelectedChapter();
+    }
+
+    private async initialize(): Promise<void> {
+        await this.ensureLevelItemViews();
+        const save = this.saveService.load();
+
+        this.selectedChapterId = this.controller.normalizeChapterId(save.currentChapterId);
+        this.isInitialized = true;
+        void this.renderSelectedChapter();
+    }
+
+    private validateReferences(): void {
+        if (this.tabButtons.length !== 3) {
+            throw new Error('ChapterView: tabButtons must contain exactly 3 nodes');
+        }
+
+        if (!this.progressValueLabel || !this.progressSuffixLabel || !this.levelGridRoot) {
+            throw new Error('ChapterView: progress labels or levelGridRoot are not assigned');
+        }
+
+        if (this.resolveLevelItemSlots().length < 20) {
+            throw new Error('ChapterView: LevelGrid must contain at least 20 level item nodes');
         }
     }
 
-    public handleLevelSelected(levelId: number): void {
-        this.onLevelSelected?.(levelId);
+    private resolveTabViews(): void {
+        this.tabViews = this.tabButtons.map((tabNode, index) => {
+            const selectedBackground = tabNode.getChildByName('SelectedBackground')?.getComponent(Sprite) ?? null;
+            const icon = tabNode.getChildByName('Icon')?.getComponent(Sprite) ?? null;
+            const label = tabNode.getChildByName('Label')?.getComponent(Label) ?? null;
+            const chapterId = (index + 1) as ChapterId;
+
+            if (!selectedBackground || !icon || !label) {
+                throw new Error(`ChapterView.resolveTabViews: Tab_${chapterId} is missing icon, label, or selected background`);
+            }
+
+            tabNode.on(Node.EventType.TOUCH_END, () => {
+                this.handleTabSelected(chapterId);
+            });
+
+            return {
+                chapterId,
+                node: tabNode,
+                selectedBackground,
+                icon,
+                label,
+            };
+        });
+    }
+
+    private async ensureLevelItemViews(): Promise<void> {
+        if (this.levelItemViews.length > 0) {
+            return;
+        }
+
+        this.levelItemSlots = this.resolveLevelItemSlots();
+
+        if (this.levelItemSlots.length < 20) {
+            throw new Error('ChapterView.ensureLevelItemViews: level item slots are incomplete');
+        }
+
+        const levelItemPrefab = await this.loadLevelItemPrefab();
+
+        this.levelItemViews = this.levelItemSlots.map((slotNode, index) => {
+            this.clearSlotChildren(slotNode);
+
+            const levelItemNode = instantiate(levelItemPrefab);
+            levelItemNode.name = `Content_${index + 1}`;
+            levelItemNode.setParent(slotNode);
+            levelItemNode.setPosition(0, 0, 0);
+
+            const levelItemView = levelItemNode.getComponent(LevelItemView);
+
+            if (!levelItemView) {
+                throw new Error(`ChapterView.ensureLevelItemViews: instantiated level item ${slotNode.name || index} is missing LevelItemView`);
+            }
+
+            return levelItemView;
+        });
+    }
+
+    private async renderSelectedChapter(): Promise<void> {
+        const renderVersion = ++this.renderVersion;
+        await this.ensureLevelItemViews();
+        const save = this.saveService.load();
+        const config = await this.loadChapterConfig(this.selectedChapterId);
+
+        if (renderVersion !== this.renderVersion) {
+            return;
+        }
+
+        const levelDisplayModels = this.controller.buildLevelDisplayModels(config, save);
+        const clearedCount = this.controller.getProgressCount(config, save);
+
+        this.progressValueLabel!.string = `${clearedCount}/${config.levels.length}`;
+        this.progressSuffixLabel!.string = 'Cleared';
+        this.levelSelections.clear();
+
+        this.levelItemViews.forEach((levelItemView, index) => {
+            const levelDisplayModel = levelDisplayModels[index] ?? null;
+            const levelItemNode = levelItemView.node;
+
+            if (!levelItemNode) {
+                throw new Error(`ChapterView.renderSelectedChapter: levelItem node ${index} is missing`);
+            }
+
+            if (!levelDisplayModel) {
+                levelItemNode.active = false;
+                levelItemView.onTap = null;
+                return;
+            }
+
+            levelItemNode.active = true;
+            levelItemView.onTap = levelDisplayModel.isPlayable ? this.handleLevelTap : null;
+            levelItemView.render(this.toLevelItemRenderData(levelDisplayModel));
+
+            if (levelDisplayModel.isPlayable) {
+                this.levelSelections.set(levelDisplayModel.levelId, this.createLevelSelection(config, levelDisplayModel));
+            }
+        });
+
+        this.renderTabs();
+    }
+
+    private async loadChapterConfig(chapterId: ChapterId): Promise<ChapterLevelConfig> {
+        const chapterFileName = this.controller.getChapterFileName(chapterId);
+
+        return this.levelService.loadChapterConfig(chapterFileName);
+    }
+
+    private renderTabs(): void {
+        this.tabViews.forEach((tabView) => {
+            const isSelected = tabView.chapterId === this.selectedChapterId;
+
+            tabView.selectedBackground.node.active = isSelected;
+            tabView.label.color = isSelected ? COLORS.tabSelectedText : COLORS.tabIdleText;
+            tabView.icon.color = isSelected ? COLORS.tabSelectedText : COLORS.tabIdleText;
+        });
+    }
+
+    private handleTabSelected(chapterId: ChapterId): void {
+        if (chapterId === this.selectedChapterId) {
+            return;
+        }
+
+        this.selectedChapterId = chapterId;
+        this.refresh();
+    }
+
+    private readonly handleLevelTap = (levelId: number): void => {
+        const selection = this.levelSelections.get(levelId) ?? null;
+
+        if (!selection) {
+            return;
+        }
+
+        this.onLevelSelected?.(selection);
+    };
+
+    private createLevelSelection(
+        config: ChapterLevelConfig,
+        displayModel: ChapterLevelDisplayModel,
+    ): ChapterLevelSelection {
+        return {
+            chapterId: this.controller.normalizeChapterId(config.chapterId),
+            chapterFileName: this.controller.getChapterFileName(config.chapterId),
+            levelId: displayModel.levelId,
+            levelIndex: displayModel.levelIndex,
+        };
+    }
+
+    private toLevelItemRenderData(displayModel: ChapterLevelDisplayModel): LevelItemRenderData {
+        return {
+            levelId: displayModel.levelId,
+            displayNumber: displayModel.displayNumber,
+            status: displayModel.status,
+            isPlayable: displayModel.isPlayable,
+        };
+    }
+
+    private resolveLevelItemSlots(): Node[] {
+        const gridChildren = this.levelGridRoot?.children.slice() ?? [];
+
+        if (gridChildren.length >= 20) {
+            return this.sortLevelItemSlots(gridChildren);
+        }
+
+        return this.levelItemNodes.slice();
+    }
+
+    private sortLevelItemSlots(levelItemSlots: readonly Node[]): Node[] {
+        return levelItemSlots
+            .map((node, index) => ({
+                node,
+                index,
+                order: this.parseLevelItemOrder(node.name),
+            }))
+            .sort((left, right) => {
+                if (left.order === right.order) {
+                    return left.index - right.index;
+                }
+
+                return left.order - right.order;
+            })
+            .map((entry) => entry.node);
+    }
+
+    private parseLevelItemOrder(nodeName: string): number {
+        const match = nodeName.match(/(\d+)$/);
+
+        if (!match) {
+            return Number.MAX_SAFE_INTEGER;
+        }
+
+        return Number(match[1]);
+    }
+
+    private async loadLevelItemPrefab(): Promise<Prefab> {
+        if (!this.levelItemPrefabPromise) {
+            this.levelItemPrefabPromise = new Promise<Prefab>((resolve, reject) => {
+                resources.load(LEVEL_ITEM_PREFAB_PATH, Prefab, (error, asset) => {
+                    if (error) {
+                        reject(new Error(`ChapterView.loadLevelItemPrefab failed: ${error.message}`));
+                        return;
+                    }
+
+                    if (!asset) {
+                        reject(new Error('ChapterView.loadLevelItemPrefab failed: prefab asset is missing'));
+                        return;
+                    }
+
+                    resolve(asset);
+                });
+            });
+        }
+
+        return await this.levelItemPrefabPromise;
+    }
+
+    private clearSlotChildren(slotNode: Node): void {
+        slotNode.children.slice().forEach((childNode) => {
+            childNode.removeFromParent();
+            childNode.destroy();
+        });
     }
 }

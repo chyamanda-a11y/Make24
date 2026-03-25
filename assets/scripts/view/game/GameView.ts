@@ -1,4 +1,4 @@
-import { _decorator, Button, Component, EventTouch, Node, Prefab, Tween, instantiate, resources, tween, Vec3 } from 'cc';
+import { _decorator, Button, Component, EventTouch, Label, Node, Prefab, Tween, instantiate, resources, tween, Vec3 } from 'cc';
 
 import { GameController } from '../../controller/game/GameController';
 import { LevelService } from '../../core/LevelService';
@@ -22,6 +22,18 @@ const RESULT_POPUP_PREFAB_PATH = 'prefabs/ResultPupUI';
 const CONTROL_BUTTON_PRESS_SCALE = 0.94;
 const CONTROL_BUTTON_PRESS_DURATION = 0.08;
 const CONTROL_BUTTON_RELEASE_DURATION = 0.1;
+const HEADER_TITLE_PATH = 'Header/Level 24: MasterNode';
+const HEADER_LEVEL_NUMBER_PATH = '24Node';
+const CHAPTER_TITLE_BY_ID: Readonly<Record<number, string>> = {
+    1: 'Junior',
+    2: 'Middle',
+    3: 'Senior',
+};
+
+interface LevelRequest {
+    readonly chapterFileName: string;
+    readonly levelIndex: number;
+}
 
 @ccclass('GameView')
 export class GameView extends Component {
@@ -40,8 +52,21 @@ export class GameView extends Component {
     @property(Node)
     private readonly tipButton: Node | null = null;
 
-    @property({ type: String })
-    private readonly levelFileName: string = 'chapter_01';
+    @property(Node)
+    private readonly exitButton: Node | null = null;
+
+    @property(Node)
+    private readonly headerTitleNode: Node | null = null;
+
+    @property(Node)
+    private readonly headerLevelNumberNode: Node | null = null;
+
+    @property
+    private levelFileName: string = 'chapter_01';
+
+    public onLevelStarted: ((level: LevelModel) => void) | null = null;
+    public onLevelCompleted: ((level: LevelModel) => void) | null = null;
+    public onExitRequested: (() => void) | null = null;
 
     private readonly controller: GameController = new GameController();
     private readonly levelService: LevelService = new LevelService();
@@ -50,17 +75,31 @@ export class GameView extends Component {
     private backOneButtonComponent: Button | null = null;
     private retryButtonComponent: Button | null = null;
     private tipButtonComponent: Button | null = null;
+    private exitButtonComponent: Button | null = null;
     private answerPopupView: AnswerPopupView | null = null;
     private resultPopupView: ResultPopupView | null = null;
     private chapterLevels: readonly LevelModel[] = [];
     private currentLevelIndex: number = 0;
     private readonly controlButtonBaseScales: Map<Node, Vec3> = new Map();
+    private pendingLevelRequest: LevelRequest | null = null;
+    private isInitialized: boolean = false;
+    private loadRequestVersion: number = 0;
+    private popupInitializationPromise: Promise<void> | null = null;
+    private reportedCompletedLevelId: number | null = null;
+    private resolvedExitButton: Node | null = null;
+    private headerTitleLabel: Label | null = null;
+    private headerLevelNumberLabel: Label | null = null;
 
     protected onLoad(): void {
         this.numPanelViews = this.resolveNumPanels();
         this.signPanelViews = this.resolveSignPanels();
         this.resolveControlButtons();
+        this.resolveHeaderLabels();
         this.validatePanelReferences();
+        this.refreshControlButtons();
+    }
+
+    protected onEnable(): void {
         this.registerInteraction();
         this.refreshControlButtons();
     }
@@ -75,23 +114,72 @@ export class GameView extends Component {
     }
 
     private async initialize(): Promise<void> {
-        const [chapterLevels] = await Promise.all([
-            this.loadChapterLevels(),
-            this.initializePopupViews(),
-        ]);
-
-        this.chapterLevels = chapterLevels;
-        this.startLevelByIndex(0);
+        await this.ensurePopupViews();
+        await this.applyLevelRequest(this.pendingLevelRequest ?? {
+            chapterFileName: this.levelFileName,
+            levelIndex: 0,
+        });
+        this.isInitialized = true;
     }
 
-    private async loadChapterLevels(): Promise<readonly LevelModel[]> {
+    public openLevel(chapterFileName: string, levelIndex: number): void {
+        this.pendingLevelRequest = {
+            chapterFileName,
+            levelIndex,
+        };
+
+        if (!this.isInitialized) {
+            return;
+        }
+
+        void this.applyLevelRequest(this.pendingLevelRequest);
+    }
+
+    public isCurrentLevelLastInChapter(): boolean {
+        return !this.hasNextLevel();
+    }
+
+    private async loadChapterLevels(chapterFileName: string): Promise<readonly LevelModel[]> {
         try {
-            const config = await this.levelService.loadChapterConfig(this.levelFileName);
+            const config = await this.levelService.loadChapterConfig(chapterFileName);
 
             return config.levels.length > 0 ? config.levels : [FALLBACK_LEVEL];
         } catch {
             return [FALLBACK_LEVEL];
         }
+    }
+
+    private async ensurePopupViews(): Promise<void> {
+        if (this.answerPopupView && this.resultPopupView) {
+            return;
+        }
+
+        if (!this.popupInitializationPromise) {
+            this.popupInitializationPromise = this.initializePopupViews();
+        }
+
+        await this.popupInitializationPromise;
+    }
+
+    private async applyLevelRequest(request: LevelRequest): Promise<void> {
+        const requestVersion = ++this.loadRequestVersion;
+        const chapterLevels = await this.loadChapterLevels(request.chapterFileName);
+
+        if (requestVersion !== this.loadRequestVersion) {
+            return;
+        }
+
+        this.levelFileName = request.chapterFileName;
+        this.chapterLevels = chapterLevels;
+        this.startLevelByIndex(this.sanitizeLevelIndex(request.levelIndex));
+    }
+
+    private sanitizeLevelIndex(levelIndex: number): number {
+        if (this.chapterLevels.length === 0) {
+            return 0;
+        }
+
+        return Math.min(Math.max(levelIndex, 0), this.chapterLevels.length - 1);
     }
 
     private async initializePopupViews(): Promise<void> {
@@ -143,8 +231,10 @@ export class GameView extends Component {
         }
 
         this.currentLevelIndex = index;
+        this.reportedCompletedLevelId = null;
         this.hideTransientPopups();
         this.controller.startLevel(level);
+        this.onLevelStarted?.(level);
         this.render();
     }
 
@@ -186,6 +276,11 @@ export class GameView extends Component {
         this.tipButton?.on(Node.EventType.TOUCH_CANCEL, this.handleControlButtonTouchCancel, this);
         this.tipButton?.on(Node.EventType.TOUCH_END, this.handleTipTap, this);
 
+        this.resolvedExitButton?.on(Node.EventType.TOUCH_START, this.handleControlButtonTouchStart, this);
+        this.resolvedExitButton?.on(Node.EventType.TOUCH_END, this.handleControlButtonTouchEnd, this);
+        this.resolvedExitButton?.on(Node.EventType.TOUCH_CANCEL, this.handleControlButtonTouchCancel, this);
+        this.resolvedExitButton?.on(Node.EventType.TOUCH_END, this.handleExitTap, this);
+
     }
 
     private unregisterInteraction(): void {
@@ -212,6 +307,11 @@ export class GameView extends Component {
         this.tipButton?.off(Node.EventType.TOUCH_CANCEL, this.handleControlButtonTouchCancel, this);
         this.tipButton?.off(Node.EventType.TOUCH_END, this.handleTipTap, this);
 
+        this.resolvedExitButton?.off(Node.EventType.TOUCH_START, this.handleControlButtonTouchStart, this);
+        this.resolvedExitButton?.off(Node.EventType.TOUCH_END, this.handleControlButtonTouchEnd, this);
+        this.resolvedExitButton?.off(Node.EventType.TOUCH_CANCEL, this.handleControlButtonTouchCancel, this);
+        this.resolvedExitButton?.off(Node.EventType.TOUCH_END, this.handleExitTap, this);
+
     }
 
     private render(): void {
@@ -220,7 +320,7 @@ export class GameView extends Component {
 
         this.numPanelViews.forEach((panel, index) => {
             const value = model.currentNumbers[index] ?? null;
-            const isSelected = model.selectedNumberIndices.includes(index);
+            const isSelected = model.selectedNumberIndices.indexOf(index) >= 0;
             const isSolved = model.hasCompletedLevel && index === finalNumberIndex;
 
             panel.render(value, isSelected, isSolved);
@@ -235,6 +335,7 @@ export class GameView extends Component {
         });
 
         this.refreshControlButtons();
+        this.renderHeader(model.currentLevel);
         this.syncResultPopup();
     }
 
@@ -286,6 +387,8 @@ export class GameView extends Component {
         this.backOneButtonComponent = this.backOneButton.getComponent(Button);
         this.retryButtonComponent = this.retryButton.getComponent(Button);
         this.tipButtonComponent = this.tipButton.getComponent(Button);
+        this.resolvedExitButton = this.resolveExitButton();
+        this.exitButtonComponent = this.resolvedExitButton?.getComponent(Button) ?? null;
 
         if (!this.backOneButtonComponent) {
             throw new Error('GameView: backOneButton is missing Button component');
@@ -299,9 +402,21 @@ export class GameView extends Component {
             throw new Error('GameView: tipButton is missing Button component');
         }
 
+        if (this.resolvedExitButton && !this.exitButtonComponent) {
+            throw new Error('GameView: ExitBtn is missing Button component');
+        }
+
         this.initializeControlButtonVisual(this.backOneButton, this.backOneButtonComponent);
         this.initializeControlButtonVisual(this.retryButton, this.retryButtonComponent);
         this.initializeControlButtonVisual(this.tipButton, this.tipButtonComponent);
+        if (this.resolvedExitButton && this.exitButtonComponent) {
+            this.initializeControlButtonVisual(this.resolvedExitButton, this.exitButtonComponent);
+        }
+    }
+
+    private resolveHeaderLabels(): void {
+        this.headerTitleLabel = this.resolveHeaderLabel(this.headerTitleNode, HEADER_TITLE_PATH);
+        this.headerLevelNumberLabel = this.resolveHeaderLabel(this.headerLevelNumberNode, HEADER_LEVEL_NUMBER_PATH);
     }
 
     private refreshControlButtons(): void {
@@ -317,6 +432,10 @@ export class GameView extends Component {
 
         if (this.tipButtonComponent) {
             this.tipButtonComponent.interactable = model.currentLevel !== null && !model.hasCompletedLevel;
+        }
+
+        if (this.exitButtonComponent) {
+            this.exitButtonComponent.interactable = true;
         }
     }
 
@@ -375,12 +494,29 @@ export class GameView extends Component {
             return this.tipButtonComponent;
         }
 
+        if (buttonNode === this.resolvedExitButton) {
+            return this.exitButtonComponent;
+        }
+
         return null;
     }
 
     private hideTransientPopups(): void {
         this.answerPopupView?.hide();
         this.resultPopupView?.hide();
+    }
+
+    private renderHeader(level: LevelModel | null): void {
+        const displayLevelNumber = level ? `${this.currentLevelIndex + 1}` : '';
+        const chapterTitle = level ? this.getChapterTitle(level.chapterId) : '';
+
+        if (this.headerTitleLabel) {
+            this.headerTitleLabel.string = level ? `Level ${displayLevelNumber}: ${chapterTitle}` : '';
+        }
+
+        if (this.headerLevelNumberLabel) {
+            this.headerLevelNumberLabel.string = displayLevelNumber;
+        }
     }
 
     private syncResultPopup(): void {
@@ -391,6 +527,7 @@ export class GameView extends Component {
         }
 
         if (!model.hasCompletedLevel) {
+            this.reportedCompletedLevelId = null;
             if (this.resultPopupView.node.active) {
                 this.resultPopupView.hide();
             }
@@ -404,6 +541,11 @@ export class GameView extends Component {
                 this.hasNextLevel() ? '恭喜通关' : '全部完成',
                 this.hasNextLevel() ? '下一关' : '重新开始',
             );
+        }
+
+        if (model.currentLevel && this.reportedCompletedLevelId !== model.currentLevel.id) {
+            this.reportedCompletedLevelId = model.currentLevel.id;
+            this.onLevelCompleted?.(model.currentLevel);
         }
     }
 
@@ -475,6 +617,14 @@ export class GameView extends Component {
         this.answerPopupView.show(answerExpression);
     }
 
+    private handleExitTap(): void {
+        if (!this.exitButtonComponent?.interactable) {
+            return;
+        }
+
+        this.onExitRequested?.();
+    }
+
     private hasNextLevel(): boolean {
         return this.currentLevelIndex < this.chapterLevels.length - 1;
     }
@@ -482,5 +632,29 @@ export class GameView extends Component {
     private handleResultNextTap(): void {
         const nextLevelIndex = this.hasNextLevel() ? this.currentLevelIndex + 1 : 0;
         this.startLevelByIndex(nextLevelIndex);
+    }
+
+    private resolveHeaderLabel(headerNode: Node | null, fallbackPath: string): Label | null {
+        const resolvedNode = headerNode ?? this.findNodeByPath(fallbackPath);
+
+        return resolvedNode?.getComponent(Label) ?? null;
+    }
+
+    private getChapterTitle(chapterId: number): string {
+        return CHAPTER_TITLE_BY_ID[chapterId] ?? CHAPTER_TITLE_BY_ID[1];
+    }
+
+    private resolveExitButton(): Node | null {
+        if (this.exitButton) {
+            return this.exitButton;
+        }
+
+        return this.findNodeByPath('container/Header/ExitBtn');
+    }
+
+    private findNodeByPath(nodePath: string): Node | null {
+        return nodePath
+            .split('/')
+            .reduce<Node | null>((currentNode, nodeName) => currentNode?.getChildByName(nodeName) ?? null, this.node);
     }
 }

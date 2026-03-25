@@ -56,7 +56,7 @@ export class GameController {
     }
 
     public handleOperatorTap(operator: OperatorSymbol): void {
-        if (!VALID_OPERATORS.includes(operator)) {
+        if (VALID_OPERATORS.indexOf(operator) < 0) {
             throw new Error(`GameController.handleOperatorTap: invalid operator ${operator}`);
         }
 

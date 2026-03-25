@@ -89,7 +89,7 @@ interface ProgressBarRef {
 @ccclass('FigmaGamePage')
 @executeInEditMode(true)
 export class FigmaGamePage extends Component {
-    @property({ type: String })
+    @property
     private levelFileName: string = 'chapter_figma_demo';
 
     private readonly controller: GameController = new GameController();
@@ -547,7 +547,7 @@ export class FigmaGamePage extends Component {
         this.numberCards.forEach((card, index) => {
             const value = model.currentNumbers[index];
             const isVisible = value !== undefined && value !== null;
-            const isSelected = model.selectedNumberIndices.includes(index);
+            const isSelected = model.selectedNumberIndices.indexOf(index) >= 0;
             const isSolved = model.hasCompletedLevel && index === finalNumberIndex;
 
             card.node.active = isVisible;
