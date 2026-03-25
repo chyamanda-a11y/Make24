@@ -3,6 +3,15 @@ const path = require('path');
 
 const GOAL_VALUE = 24;
 const OUTPUT_DIR = path.resolve(__dirname, '../../assets/resources/config/levels');
+const CHAPTER_DEFINITIONS = [
+    { chapterId: 1, chapterName: 'beginner', fileName: 'chapter_01.json', targetCount: 80 },
+    { chapterId: 2, chapterName: 'advanced', fileName: 'chapter_02.json', targetCount: 60 },
+    { chapterId: 3, chapterName: 'challenge', fileName: 'chapter_03.json', targetCount: 40 },
+];
+
+function createLevelKey(numbers) {
+    return [...numbers].sort((left, right) => left - right).join('-');
+}
 
 function gcd(a, b) {
     let x = Math.abs(a);
@@ -432,6 +441,34 @@ function sortByDifficultyDesc(left, right) {
     return left.key.localeCompare(right.key);
 }
 
+function buildCandidateIndex(candidates) {
+    return new Map(candidates.map((candidate) => [candidate.key, candidate]));
+}
+
+function loadChapterConfig(fileName) {
+    const fullPath = path.join(OUTPUT_DIR, fileName);
+
+    return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+}
+
+function resolveExistingSelection(existingLevels, candidateIndex, chapterName) {
+    return existingLevels.map((level, index) => {
+        const key = createLevelKey(level.numbers);
+        const candidate = candidateIndex.get(key);
+
+        if (!candidate) {
+            throw new Error(
+                `${chapterName} existing level ${index + 1} with key ${key} is missing from candidate pool`,
+            );
+        }
+
+        return {
+            ...candidate,
+            answerExpression: level.answerExpression,
+        };
+    });
+}
+
 function selectByQuota(candidates, selection, usedKeys, count, predicate) {
     for (const candidate of candidates) {
         if (selection.length >= count) {
@@ -462,42 +499,50 @@ function fillSelection(candidates, selection, usedKeys, count) {
     }
 }
 
-function selectBeginnerLevels(beginnerCandidates, usedKeys) {
-    const selection = [];
+function selectBeginnerLevels(beginnerCandidates, usedKeys, targetCount, initialSelection = []) {
+    const selection = [...initialSelection];
+    const noDivisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.3)));
+    const subtractionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.5)));
+    const divisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.7)));
 
-    selectByQuota(beginnerCandidates, selection, usedKeys, 6, (candidate) => !candidate.solution.usesDivision);
-    selectByQuota(beginnerCandidates, selection, usedKeys, 10, (candidate) => candidate.solution.usesSubtraction);
-    selectByQuota(beginnerCandidates, selection, usedKeys, 14, (candidate) => candidate.solution.usesDivision);
-    fillSelection(beginnerCandidates, selection, usedKeys, 20);
+    selectByQuota(beginnerCandidates, selection, usedKeys, noDivisionQuota, (candidate) => !candidate.solution.usesDivision);
+    selectByQuota(beginnerCandidates, selection, usedKeys, subtractionQuota, (candidate) => candidate.solution.usesSubtraction);
+    selectByQuota(beginnerCandidates, selection, usedKeys, divisionQuota, (candidate) => candidate.solution.usesDivision);
+    fillSelection(beginnerCandidates, selection, usedKeys, targetCount);
 
-    return selection.slice(0, 20);
+    return selection.slice(0, targetCount);
 }
 
-function selectAdvancedLevels(advancedCandidates, usedKeys) {
-    const selection = [];
+function selectAdvancedLevels(advancedCandidates, usedKeys, targetCount, initialSelection = []) {
+    const selection = [...initialSelection];
     const midRangeCandidates = advancedCandidates.filter(
         (candidate, index) =>
             index >= Math.floor(advancedCandidates.length * 0.12) &&
             index <= Math.floor(advancedCandidates.length * 0.6),
     );
+    const divisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.4)));
+    const imbalanceQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.7)));
 
-    selectByQuota(midRangeCandidates, selection, usedKeys, 8, (candidate) => candidate.solution.usesDivision);
-    selectByQuota(midRangeCandidates, selection, usedKeys, 14, (candidate) => candidate.solution.imbalance >= 2);
-    fillSelection(midRangeCandidates, selection, usedKeys, 20);
-    fillSelection(advancedCandidates, selection, usedKeys, 20);
+    selectByQuota(midRangeCandidates, selection, usedKeys, divisionQuota, (candidate) => candidate.solution.usesDivision);
+    selectByQuota(midRangeCandidates, selection, usedKeys, imbalanceQuota, (candidate) => candidate.solution.imbalance >= 2);
+    fillSelection(midRangeCandidates, selection, usedKeys, targetCount);
+    fillSelection(advancedCandidates, selection, usedKeys, targetCount);
 
-    return selection.slice(0, 20);
+    return selection.slice(0, targetCount);
 }
 
-function selectChallengeLevels(challengeCandidates, usedKeys) {
-    const selection = [];
+function selectChallengeLevels(challengeCandidates, usedKeys, targetCount, initialSelection = []) {
+    const selection = [...initialSelection];
+    const fractionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.3)));
+    const negativeQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.5)));
+    const divisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.8)));
 
-    selectByQuota(challengeCandidates, selection, usedKeys, 6, (candidate) => candidate.solution.fractionCount > 0);
-    selectByQuota(challengeCandidates, selection, usedKeys, 10, (candidate) => candidate.solution.negativeCount > 0);
-    selectByQuota(challengeCandidates, selection, usedKeys, 16, (candidate) => candidate.solution.usesDivision);
-    fillSelection(challengeCandidates, selection, usedKeys, 20);
+    selectByQuota(challengeCandidates, selection, usedKeys, fractionQuota, (candidate) => candidate.solution.fractionCount > 0);
+    selectByQuota(challengeCandidates, selection, usedKeys, negativeQuota, (candidate) => candidate.solution.negativeCount > 0);
+    selectByQuota(challengeCandidates, selection, usedKeys, divisionQuota, (candidate) => candidate.solution.usesDivision);
+    fillSelection(challengeCandidates, selection, usedKeys, targetCount);
 
-    return selection.slice(0, 20);
+    return selection.slice(0, targetCount);
 }
 
 function buildChapterConfig(chapterId, chapterName, levels) {
@@ -544,19 +589,49 @@ function assertLevelCount(name, levels, expectedCount) {
 
 function run() {
     const { beginnerCandidates, advancedCandidates, challengeCandidates } = analyzeCandidates();
-    const usedKeys = new Set();
+    const beginnerCandidateIndex = buildCandidateIndex(beginnerCandidates);
+    const advancedCandidateIndex = buildCandidateIndex(advancedCandidates);
+    const challengeCandidateIndex = buildCandidateIndex(challengeCandidates);
+    const existingConfigs = CHAPTER_DEFINITIONS.map((definition) => loadChapterConfig(definition.fileName));
+    const usedKeys = new Set(
+        existingConfigs.flatMap((config) => config.levels.map((level) => createLevelKey(level.numbers))),
+    );
 
-    const beginnerLevels = selectBeginnerLevels(beginnerCandidates, usedKeys);
-    const advancedLevels = selectAdvancedLevels(advancedCandidates, usedKeys);
-    const challengeLevels = selectChallengeLevels(challengeCandidates, usedKeys);
+    const beginnerLevels = selectBeginnerLevels(
+        beginnerCandidates,
+        usedKeys,
+        CHAPTER_DEFINITIONS[0].targetCount,
+        resolveExistingSelection(existingConfigs[0].levels, beginnerCandidateIndex, 'beginner'),
+    );
+    const advancedLevels = selectAdvancedLevels(
+        advancedCandidates,
+        usedKeys,
+        CHAPTER_DEFINITIONS[1].targetCount,
+        resolveExistingSelection(existingConfigs[1].levels, advancedCandidateIndex, 'advanced'),
+    );
+    const challengeLevels = selectChallengeLevels(
+        challengeCandidates,
+        usedKeys,
+        CHAPTER_DEFINITIONS[2].targetCount,
+        resolveExistingSelection(existingConfigs[2].levels, challengeCandidateIndex, 'challenge'),
+    );
 
-    assertLevelCount('beginner', beginnerLevels, 20);
-    assertLevelCount('advanced', advancedLevels, 20);
-    assertLevelCount('challenge', challengeLevels, 20);
+    assertLevelCount('beginner', beginnerLevels, CHAPTER_DEFINITIONS[0].targetCount);
+    assertLevelCount('advanced', advancedLevels, CHAPTER_DEFINITIONS[1].targetCount);
+    assertLevelCount('challenge', challengeLevels, CHAPTER_DEFINITIONS[2].targetCount);
 
-    writeJson('chapter_01.json', buildChapterConfig(1, 'beginner', beginnerLevels));
-    writeJson('chapter_02.json', buildChapterConfig(2, 'advanced', advancedLevels));
-    writeJson('chapter_03.json', buildChapterConfig(3, 'challenge', challengeLevels));
+    writeJson(
+        CHAPTER_DEFINITIONS[0].fileName,
+        buildChapterConfig(CHAPTER_DEFINITIONS[0].chapterId, CHAPTER_DEFINITIONS[0].chapterName, beginnerLevels),
+    );
+    writeJson(
+        CHAPTER_DEFINITIONS[1].fileName,
+        buildChapterConfig(CHAPTER_DEFINITIONS[1].chapterId, CHAPTER_DEFINITIONS[1].chapterName, advancedLevels),
+    );
+    writeJson(
+        CHAPTER_DEFINITIONS[2].fileName,
+        buildChapterConfig(CHAPTER_DEFINITIONS[2].chapterId, CHAPTER_DEFINITIONS[2].chapterName, challengeLevels),
+    );
 
     summarize('chapter_01', beginnerLevels);
     summarize('chapter_02', advancedLevels);

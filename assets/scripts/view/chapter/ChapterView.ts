@@ -1,4 +1,19 @@
-import { _decorator, Color, Component, instantiate, Label, Node, Prefab, resources, Sprite } from 'cc';
+import {
+    _decorator,
+    Color,
+    Component,
+    instantiate,
+    Label,
+    Layout,
+    Mask,
+    Node,
+    Prefab,
+    resources,
+    ScrollView,
+    Sprite,
+    UITransform,
+    Vec3,
+} from 'cc';
 
 import {
     ChapterController,
@@ -57,16 +72,18 @@ export class ChapterView extends Component {
     private readonly levelSelections: Map<number, ChapterLevelSelection> = new Map();
 
     private tabViews: ChapterTabView[] = [];
-    private levelItemSlots: Node[] = [];
     private levelItemViews: LevelItemView[] = [];
     private selectedChapterId: ChapterId = 1;
     private renderVersion: number = 0;
     private isInitialized: boolean = false;
     private levelItemPrefabPromise: Promise<Prefab> | null = null;
+    private levelGridScrollView: ScrollView | null = null;
+    private hasPreparedLevelGridContent: boolean = false;
 
     protected onLoad(): void {
         this.validateReferences();
         this.resolveTabViews();
+        this.ensureLevelGridScrollView();
     }
 
     protected start(): void {
@@ -82,7 +99,6 @@ export class ChapterView extends Component {
     }
 
     private async initialize(): Promise<void> {
-        await this.ensureLevelItemViews();
         const save = this.saveService.load();
 
         this.selectedChapterId = this.controller.normalizeChapterId(save.currentChapterId);
@@ -97,10 +113,6 @@ export class ChapterView extends Component {
 
         if (!this.progressValueLabel || !this.progressSuffixLabel || !this.levelGridRoot) {
             throw new Error('ChapterView: progress labels or levelGridRoot are not assigned');
-        }
-
-        if (this.resolveLevelItemSlots().length < 20) {
-            throw new Error('ChapterView: LevelGrid must contain at least 20 level item nodes');
         }
     }
 
@@ -129,40 +141,47 @@ export class ChapterView extends Component {
         });
     }
 
-    private async ensureLevelItemViews(): Promise<void> {
-        if (this.levelItemViews.length > 0) {
-            return;
-        }
-
-        this.levelItemSlots = this.resolveLevelItemSlots();
-
-        if (this.levelItemSlots.length < 20) {
-            throw new Error('ChapterView.ensureLevelItemViews: level item slots are incomplete');
-        }
-
+    private async ensureLevelItemViews(requiredCount: number): Promise<void> {
+        this.prepareLevelGridContent();
         const levelItemPrefab = await this.loadLevelItemPrefab();
+        const activeLevelGridRoot = this.levelGridRoot;
 
-        this.levelItemViews = this.levelItemSlots.map((slotNode, index) => {
-            this.clearSlotChildren(slotNode);
+        if (!activeLevelGridRoot) {
+            throw new Error('ChapterView.ensureLevelItemViews: levelGridRoot is missing');
+        }
 
+        while (this.levelItemViews.length > requiredCount) {
+            const levelItemView = this.levelItemViews.pop();
+
+            if (!levelItemView) {
+                break;
+            }
+
+            levelItemView.node.removeFromParent();
+            levelItemView.node.destroy();
+        }
+
+        while (this.levelItemViews.length < requiredCount) {
+            const index = this.levelItemViews.length;
             const levelItemNode = instantiate(levelItemPrefab);
-            levelItemNode.name = `Content_${index + 1}`;
-            levelItemNode.setParent(slotNode);
+            levelItemNode.name = `LevelItem_${index + 1}`;
+            levelItemNode.setParent(activeLevelGridRoot);
             levelItemNode.setPosition(0, 0, 0);
 
             const levelItemView = levelItemNode.getComponent(LevelItemView);
 
             if (!levelItemView) {
-                throw new Error(`ChapterView.ensureLevelItemViews: instantiated level item ${slotNode.name || index} is missing LevelItemView`);
+                throw new Error(`ChapterView.ensureLevelItemViews: instantiated level item ${index + 1} is missing LevelItemView`);
             }
 
-            return levelItemView;
-        });
+            this.levelItemViews.push(levelItemView);
+        }
+
+        activeLevelGridRoot.getComponent(Layout)?.updateLayout();
     }
 
     private async renderSelectedChapter(): Promise<void> {
         const renderVersion = ++this.renderVersion;
-        await this.ensureLevelItemViews();
         const save = this.saveService.load();
         const config = await this.loadChapterConfig(this.selectedChapterId);
 
@@ -171,6 +190,12 @@ export class ChapterView extends Component {
         }
 
         const levelDisplayModels = this.controller.buildLevelDisplayModels(config, save);
+        await this.ensureLevelItemViews(levelDisplayModels.length);
+
+        if (renderVersion !== this.renderVersion) {
+            return;
+        }
+
         const clearedCount = this.controller.getProgressCount(config, save);
 
         this.progressValueLabel!.string = `${clearedCount}/${config.levels.length}`;
@@ -201,6 +226,8 @@ export class ChapterView extends Component {
         });
 
         this.renderTabs();
+        this.levelGridScrollView?.stopAutoScroll();
+        this.levelGridScrollView?.scrollToTop(0);
     }
 
     private async loadChapterConfig(chapterId: ChapterId): Promise<ChapterLevelConfig> {
@@ -259,43 +286,6 @@ export class ChapterView extends Component {
         };
     }
 
-    private resolveLevelItemSlots(): Node[] {
-        const gridChildren = this.levelGridRoot?.children.slice() ?? [];
-
-        if (gridChildren.length >= 20) {
-            return this.sortLevelItemSlots(gridChildren);
-        }
-
-        return this.levelItemNodes.slice();
-    }
-
-    private sortLevelItemSlots(levelItemSlots: readonly Node[]): Node[] {
-        return levelItemSlots
-            .map((node, index) => ({
-                node,
-                index,
-                order: this.parseLevelItemOrder(node.name),
-            }))
-            .sort((left, right) => {
-                if (left.order === right.order) {
-                    return left.index - right.index;
-                }
-
-                return left.order - right.order;
-            })
-            .map((entry) => entry.node);
-    }
-
-    private parseLevelItemOrder(nodeName: string): number {
-        const match = nodeName.match(/(\d+)$/);
-
-        if (!match) {
-            return Number.MAX_SAFE_INTEGER;
-        }
-
-        return Number(match[1]);
-    }
-
     private async loadLevelItemPrefab(): Promise<Prefab> {
         if (!this.levelItemPrefabPromise) {
             this.levelItemPrefabPromise = new Promise<Prefab>((resolve, reject) => {
@@ -318,10 +308,60 @@ export class ChapterView extends Component {
         return await this.levelItemPrefabPromise;
     }
 
-    private clearSlotChildren(slotNode: Node): void {
-        slotNode.children.slice().forEach((childNode) => {
+    private ensureLevelGridScrollView(): void {
+        if (this.levelGridScrollView || !this.levelGridRoot) {
+            return;
+        }
+
+        const contentNode = this.levelGridRoot;
+        const parentNode = contentNode.parent;
+        const contentTransform = contentNode.getComponent(UITransform);
+        const siblingIndex = contentNode.getSiblingIndex();
+
+        if (!parentNode || !contentTransform) {
+            throw new Error('ChapterView.ensureLevelGridScrollView: levelGridRoot parent or UITransform is missing');
+        }
+
+        const viewportNode = new Node('LevelGridScrollView');
+        viewportNode.layer = contentNode.layer;
+        viewportNode.setParent(parentNode);
+        viewportNode.setSiblingIndex(siblingIndex);
+        viewportNode.setPosition(new Vec3(contentNode.position.x, contentNode.position.y, contentNode.position.z));
+        viewportNode.setScale(new Vec3(contentNode.scale.x, contentNode.scale.y, contentNode.scale.z));
+        viewportNode.setRotation(contentNode.rotation);
+
+        const viewportTransform = viewportNode.addComponent(UITransform);
+        viewportTransform.setContentSize(contentTransform.contentSize);
+
+        const mask = viewportNode.addComponent(Mask);
+        mask.type = Mask.Type.GRAPHICS_STENCIL;
+
+        const scrollView = viewportNode.addComponent(ScrollView);
+        scrollView.horizontal = false;
+        scrollView.vertical = true;
+        scrollView.inertia = true;
+        scrollView.elastic = true;
+
+        contentNode.setParent(viewportNode);
+        contentNode.setPosition(0, 0, 0);
+        contentNode.setScale(1, 1, 1);
+        contentNode.setRotationFromEuler(0, 0, 0);
+
+        scrollView.content = contentNode;
+        this.levelGridScrollView = scrollView;
+    }
+
+    private prepareLevelGridContent(): void {
+        if (this.hasPreparedLevelGridContent || !this.levelGridRoot) {
+            return;
+        }
+
+        this.levelGridRoot.children.slice().forEach((childNode) => {
             childNode.removeFromParent();
             childNode.destroy();
         });
+
+        this.levelItemViews = [];
+        this.hasPreparedLevelGridContent = true;
     }
 }
