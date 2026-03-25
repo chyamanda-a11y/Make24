@@ -1,4 +1,4 @@
-import { _decorator, Component, director, instantiate, isValid, Node, Prefab, resources } from 'cc';
+import { _decorator, Component, director, Enum, instantiate, isValid, Node, Prefab, resources } from 'cc';
 
 import { ChapterController } from '../controller/chapter/ChapterController';
 import { SaveModel } from '../model/common/SaveModel';
@@ -27,6 +27,12 @@ const PAGE_NODE_NAMES = {
     game: 'MainUI',
 } as const;
 
+enum StartupPage {
+    Home = 0,
+    Chapter = 1,
+    Game = 2,
+}
+
 interface GameEntrySelection {
     readonly chapterFileName: string;
     readonly levelIndex: number;
@@ -42,6 +48,9 @@ export class AppController extends Component {
 
     @property(Node)
     private gamePage: Node | null = null;
+
+    @property({ type: Enum(StartupPage) })
+    private startupPage: StartupPage = StartupPage.Home;
 
     private readonly pageRouter: PageRouter = new PageRouter();
     private readonly levelService: LevelService = new LevelService();
@@ -62,6 +71,7 @@ export class AppController extends Component {
         this.homePage = this.resolveReusableHomePageNode(this.homePage);
         this.chapterPage = this.getUsableAssignedNode(this.chapterPage);
         this.gamePage = this.getUsableAssignedNode(this.gamePage);
+        this.deactivatePages(this.homePage, this.chapterPage, this.gamePage);
         this.bindHomeViewIfAvailable();
         this.pagesInitializationTask = this.initializePages();
         void this.pagesInitializationTask.catch((error: unknown) => {
@@ -92,9 +102,10 @@ export class AppController extends Component {
             this.resolvePageNode('game', this.gamePage),
         ]);
 
+        this.deactivatePages(this.homePage, this.chapterPage, this.gamePage);
         this.bindViews();
         this.registerPages();
-        this.openPage('home');
+        this.openPage(this.getStartupPageName());
     }
 
     private bindHomeViewIfAvailable(): void {
@@ -166,9 +177,33 @@ export class AppController extends Component {
         const pageNode = instantiate(prefab);
 
         pageNode.name = PAGE_NODE_NAMES[pageName];
+        pageNode.active = false;
         pageNode.setParent(this.node);
         pageNode.setPosition(0, 0, 0);
         return pageNode;
+    }
+
+    private deactivatePages(...pages: Array<Node | null>): void {
+        pages.forEach((pageNode) => {
+            if (!pageNode || !isValid(pageNode, true)) {
+                return;
+            }
+
+            pageNode.active = false;
+        });
+    }
+
+    private getStartupPageName(): PageName {
+        switch (this.startupPage) {
+            case StartupPage.Home:
+                return 'home';
+            case StartupPage.Chapter:
+                return 'chapter';
+            case StartupPage.Game:
+                return 'game';
+            default:
+                throw new Error(`AppController.getStartupPageName: unsupported startupPage ${this.startupPage}`);
+        }
     }
 
     private resolveReusableHomePageNode(assignedNode: Node | null): Node | null {

@@ -316,7 +316,7 @@
       "__id__": 10
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 12
@@ -1207,7 +1207,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 245,
+      "y": 215.082,
       "z": 0
     },
     "_lrot": {
@@ -1297,7 +1297,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 131.2507450613079,
+      "width": 249.2496700442779,
       "height": 153.72
     },
     "_anchorPoint": {
@@ -1329,11 +1329,11 @@
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 239,
-      "b": 167,
+      "g": 231,
+      "b": 146,
       "a": 255
     },
-    "_string": "24",
+    "_string": "24点",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 135.33125,
@@ -1487,9 +1487,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 239,
-      "b": 167,
+      "r": 63,
+      "g": 255,
+      "b": 139,
       "a": 255
     },
     "_string": "口算",
@@ -2007,7 +2007,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -139.843,
-      "y": 378,
+      "y": 390.466,
       "z": 0
     },
     "_lrot": {
@@ -2084,7 +2084,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "4c43aac4-5aad-4158-acb2-07248b8ba855@f9941",
+      "__uuid__": "0a59f56d-3085-4644-a994-353290c6671d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -2128,7 +2128,7 @@
       "__id__": 10
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 86
@@ -2387,6 +2387,7 @@
       "__id__": 0
     },
     "fileId": "HomePage_n4s7m2pk",
+    "instance": null,
     "targetOverrides": null
   }
 ]

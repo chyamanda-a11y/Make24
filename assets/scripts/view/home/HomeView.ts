@@ -2,6 +2,7 @@ import {
     _decorator,
     Color,
     Component,
+    EventTouch,
     Layers,
     Node,
     Sprite,
@@ -137,6 +138,7 @@ export class HomeView extends Component {
 
     private readonly spriteFrameCache: Map<string, SpriteFrame> = new Map();
     private readonly spriteFrameTasks: Map<string, Promise<SpriteFrame>> = new Map();
+    private readonly pressedButtons: Set<Node> = new Set();
     private runtimeEventsBound: boolean = false;
 
     protected onLoad(): void {
@@ -154,16 +156,31 @@ export class HomeView extends Component {
     }
 
     public handleStartButton(): void {
+        if (!this.consumePressedButton(this.startButton)) {
+            return;
+        }
+
         AudioUtil.PlayNormalBtn();
         this.onStartTap?.();
     }
 
     public handleMenuButton(): void {
+        if (!this.consumePressedButton(this.menuButton)) {
+            return;
+        }
+
         AudioUtil.PlayNormalBtn();
         this.onMenuTap?.();
     }
 
     public handleSettingsButton(): void {
+        const pressedSettingButton = this.consumePressedButton(this.topSettingButton)
+            || this.consumePressedButton(this.bottomSettingButton);
+
+        if (!pressedSettingButton) {
+            return;
+        }
+
         AudioUtil.PlayNormalBtn();
         this.onSettingsTap?.();
     }
@@ -194,10 +211,18 @@ export class HomeView extends Component {
             return;
         }
 
+        this.startButton?.on(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.startButton?.on(Node.EventType.TOUCH_END, this.handleStartButton, this);
+        this.startButton?.on(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.menuButton?.on(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.menuButton?.on(Node.EventType.TOUCH_END, this.handleMenuButton, this);
+        this.menuButton?.on(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.topSettingButton?.on(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.topSettingButton?.on(Node.EventType.TOUCH_END, this.handleSettingsButton, this);
+        this.topSettingButton?.on(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.bottomSettingButton?.on(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.bottomSettingButton?.on(Node.EventType.TOUCH_END, this.handleSettingsButton, this);
+        this.bottomSettingButton?.on(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
         this.runtimeEventsBound = true;
     }
 
@@ -206,11 +231,49 @@ export class HomeView extends Component {
             return;
         }
 
+        this.startButton?.off(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.startButton?.off(Node.EventType.TOUCH_END, this.handleStartButton, this);
+        this.startButton?.off(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.menuButton?.off(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.menuButton?.off(Node.EventType.TOUCH_END, this.handleMenuButton, this);
+        this.menuButton?.off(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.topSettingButton?.off(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.topSettingButton?.off(Node.EventType.TOUCH_END, this.handleSettingsButton, this);
+        this.topSettingButton?.off(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.bottomSettingButton?.off(Node.EventType.TOUCH_START, this.handleButtonTouchStart, this);
         this.bottomSettingButton?.off(Node.EventType.TOUCH_END, this.handleSettingsButton, this);
+        this.bottomSettingButton?.off(Node.EventType.TOUCH_CANCEL, this.handleButtonTouchCancel, this);
+        this.pressedButtons.clear();
         this.runtimeEventsBound = false;
+    }
+
+    private handleButtonTouchStart(event: EventTouch): void {
+        const buttonNode = event.currentTarget as Node | null;
+
+        if (!buttonNode) {
+            return;
+        }
+
+        this.pressedButtons.add(buttonNode);
+    }
+
+    private handleButtonTouchCancel(event: EventTouch): void {
+        const buttonNode = event.currentTarget as Node | null;
+
+        if (!buttonNode) {
+            return;
+        }
+
+        this.pressedButtons.delete(buttonNode);
+    }
+
+    private consumePressedButton(buttonNode: Node | null): boolean {
+        if (!buttonNode || !this.pressedButtons.has(buttonNode)) {
+            return false;
+        }
+
+        this.pressedButtons.delete(buttonNode);
+        return true;
     }
 
     private async loadSpriteFramesSafely(): Promise<void> {
