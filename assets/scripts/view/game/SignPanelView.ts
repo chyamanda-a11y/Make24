@@ -1,5 +1,6 @@
 import { _decorator, Button, Color, Component, Enum, Label, Node, Sprite } from 'cc';
 
+import { AudioUtil } from '../../core/AudioUtil';
 import { OperatorSymbol } from '../../model/game/OperatorSymbol';
 
 const { ccclass, property } = _decorator;
@@ -98,10 +99,11 @@ export class SignPanelView extends Component {
     }
 
     private handleTap(): void {
-        if (!this.isInteractable) {
+        if (!this.isInteractable || !this.onTap) {
             return;
         }
 
+        AudioUtil.PlayMatch24();
         this.onTap?.(this.getOperator());
     }
 

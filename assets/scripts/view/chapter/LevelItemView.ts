@@ -12,6 +12,7 @@ import {
 } from 'cc';
 
 import { ChapterLevelStatus } from '../../controller/chapter/ChapterController';
+import { AudioUtil } from '../../core/AudioUtil';
 
 const { ccclass, property } = _decorator;
 
@@ -197,6 +198,12 @@ export class LevelItemView extends Component {
         }
 
         this.playScale(1, RELEASE_DURATION);
+
+        if (!this.onTap) {
+            return;
+        }
+
+        AudioUtil.PlayNormalBtn();
         this.onTap?.(this.levelId);
     }
 

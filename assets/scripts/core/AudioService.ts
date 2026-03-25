@@ -1,7 +1,15 @@
+import { AudioUtil } from './AudioUtil';
+
 export class AudioService {
-    public playButton(): void {}
+    public playButton(): void {
+        AudioUtil.PlayNormalBtn();
+    }
 
-    public playMerge(): void {}
+    public playMerge(): void {
+        AudioUtil.PlayMatch24();
+    }
 
-    public playWin(): void {}
+    public playWin(): void {
+        AudioUtil.PlaySuccess();
+    }
 }

@@ -1,5 +1,7 @@
 import { _decorator, Button, Component, Label } from 'cc';
 
+import { AudioUtil } from '../../core/AudioUtil';
+
 const { ccclass } = _decorator;
 
 @ccclass('ResultPopupView')
@@ -55,6 +57,7 @@ export class ResultPopupView extends Component {
     }
 
     public handleNextButton(): void {
+        AudioUtil.PlayNormalBtn();
         this.onNextTap?.();
     }
 }

@@ -1,5 +1,7 @@
 import { _decorator, Button, Component, Label } from 'cc';
 
+import { AudioUtil } from '../../core/AudioUtil';
+
 const { ccclass } = _decorator;
 
 @ccclass('AnswerPopupView')
@@ -42,6 +44,7 @@ export class AnswerPopupView extends Component {
     }
 
     private handleCloseTap(): void {
+        AudioUtil.PlayNormalBtn();
         this.hide();
     }
 

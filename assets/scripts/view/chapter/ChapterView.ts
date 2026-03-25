@@ -14,6 +14,7 @@ import {
     ChapterId,
     ChapterLevelDisplayModel,
 } from '../../controller/chapter/ChapterController';
+import { AudioUtil } from '../../core/AudioUtil';
 import { ChapterLevelConfig, LevelService } from '../../core/LevelService';
 import { SaveService } from '../../core/SaveService';
 import { LevelItemRenderData, LevelItemView } from './LevelItemView';
@@ -179,6 +180,7 @@ export class ChapterView extends Component {
             }
 
             tabNode.on(Node.EventType.TOUCH_END, () => {
+                AudioUtil.PlayNormalBtn();
                 this.handleTabSelected(chapterId);
             });
 

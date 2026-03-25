@@ -1,6 +1,7 @@
 import { _decorator, Button, Component, EventTouch, Label, Node, Prefab, Tween, instantiate, resources, tween, Vec3 } from 'cc';
 
 import { GameController } from '../../controller/game/GameController';
+import { AudioUtil } from '../../core/AudioUtil';
 import { LevelService } from '../../core/LevelService';
 import { LevelModel } from '../../model/game/LevelModel';
 import { AnswerPopupView } from './AnswerPopupView';
@@ -545,6 +546,7 @@ export class GameView extends Component {
 
         if (model.currentLevel && this.reportedCompletedLevelId !== model.currentLevel.id) {
             this.reportedCompletedLevelId = model.currentLevel.id;
+            AudioUtil.PlaySuccess();
             this.onLevelCompleted?.(model.currentLevel);
         }
     }
@@ -595,6 +597,7 @@ export class GameView extends Component {
             return;
         }
 
+        AudioUtil.PlayNormalBtn();
         this.render();
     }
 
@@ -603,6 +606,7 @@ export class GameView extends Component {
             return;
         }
 
+        AudioUtil.PlayNormalBtn();
         this.hideTransientPopups();
         this.controller.restartLevel();
         this.render();
@@ -613,6 +617,7 @@ export class GameView extends Component {
             return;
         }
 
+        AudioUtil.PlayNormalBtn();
         const answerExpression = this.controller.revealAnswer();
         this.answerPopupView.show(answerExpression);
     }
@@ -622,6 +627,7 @@ export class GameView extends Component {
             return;
         }
 
+        AudioUtil.PlayNormalBtn();
         this.onExitRequested?.();
     }
 

@@ -1,5 +1,7 @@
 import { _decorator, Button, Color, Component, Label, Node, Sprite } from 'cc';
 
+import { AudioUtil } from '../../core/AudioUtil';
+
 const { ccclass } = _decorator;
 
 const DEFAULT_CARD_COLOR = new Color(255, 255, 255, 255);
@@ -65,10 +67,11 @@ export class NumPanelView extends Component {
     }
 
     private handleTap(): void {
-        if (!this.isInteractable) {
+        if (!this.isInteractable || !this.onTap) {
             return;
         }
 
+        AudioUtil.PlayMatch24();
         this.onTap?.();
     }
 

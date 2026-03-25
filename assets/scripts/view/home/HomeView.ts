@@ -10,6 +10,8 @@ import {
     resources,
 } from 'cc';
 
+import { AudioUtil } from '../../core/AudioUtil';
+
 const { ccclass } = _decorator;
 
 const DESIGN_WIDTH = 720;
@@ -152,14 +154,17 @@ export class HomeView extends Component {
     }
 
     public handleStartButton(): void {
+        AudioUtil.PlayNormalBtn();
         this.onStartTap?.();
     }
 
     public handleMenuButton(): void {
+        AudioUtil.PlayNormalBtn();
         this.onMenuTap?.();
     }
 
     public handleSettingsButton(): void {
+        AudioUtil.PlayNormalBtn();
         this.onSettingsTap?.();
     }
 

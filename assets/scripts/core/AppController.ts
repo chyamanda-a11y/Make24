@@ -6,7 +6,7 @@ import { LevelModel } from '../model/game/LevelModel';
 import { ChapterLevelSelection, ChapterView } from '../view/chapter/ChapterView';
 import { GameView } from '../view/game/GameView';
 import { HomeView } from '../view/home/HomeView';
-import { AudioService } from './AudioService';
+import { AudioUtil } from './AudioUtil';
 import { ChapterLevelConfig, LevelService } from './LevelService';
 import { PageName, PageRouter } from './PageRouter';
 import { SaveService } from './SaveService';
@@ -46,7 +46,6 @@ export class AppController extends Component {
     private readonly levelService: LevelService = new LevelService();
     private readonly saveService: SaveService = new SaveService();
     private readonly wxService: WXService = new WXService();
-    private readonly audioService: AudioService = new AudioService();
     private readonly chapterController: ChapterController = new ChapterController();
 
     private homeView: HomeView | null = null;
@@ -56,6 +55,9 @@ export class AppController extends Component {
     private pagesInitializationTask: Promise<void> | null = null;
 
     protected onLoad(): void {
+        void AudioUtil.Preload().catch((error: unknown) => {
+            console.error('AppController.onLoad: AudioUtil.Preload failed', error);
+        });
         this.homePage = this.resolveReusableHomePageNode(this.homePage);
         this.chapterPage = this.getUsableAssignedNode(this.chapterPage);
         this.gamePage = this.getUsableAssignedNode(this.gamePage);
@@ -80,10 +82,6 @@ export class AppController extends Component {
 
     public getWXService(): WXService {
         return this.wxService;
-    }
-
-    public getAudioService(): AudioService {
-        return this.audioService;
     }
 
     private async initializePages(): Promise<void> {
