@@ -5,6 +5,7 @@ import { SaveModel } from '../model/common/SaveModel';
 import { LevelModel } from '../model/game/LevelModel';
 import { ChapterLevelSelection, ChapterView } from '../view/chapter/ChapterView';
 import { GameView } from '../view/game/GameView';
+import { MainUIEnterAnimator } from '../view/game/MainUIEnterAnimator';
 import { HomeView } from '../view/home/HomeView';
 import { AudioUtil } from './AudioUtil';
 import { ChapterLevelConfig, LevelService } from './LevelService';
@@ -123,6 +124,8 @@ export class AppController extends Component {
         if (!this.gameView) {
             throw new Error('AppController.bindViews: gamePage is missing GameView');
         }
+
+        this.gamePage.getComponent(MainUIEnterAnimator) ?? this.gamePage.addComponent(MainUIEnterAnimator);
 
         this.homeView.onStartTap = this.handleHomeStartTap;
         this.homeView.onMenuTap = this.handleHomeMenuTap;

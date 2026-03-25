@@ -179,9 +179,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 19,
-      "g": 17,
-      "b": 0,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_spriteFrame": {
@@ -2251,7 +2251,7 @@
     "_string": "6/20",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 63,
+    "_actualFontSize": 62,
     "_fontSize": 54,
     "_fontFamily": "Arial",
     "_lineHeight": 54,
