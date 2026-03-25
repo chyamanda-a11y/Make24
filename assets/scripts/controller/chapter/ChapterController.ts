@@ -53,10 +53,36 @@ export class ChapterController {
         return chapterId <= Math.max(save.unlockedChapterId, 1);
     }
 
+    public resolveCurrentPlayableLevelIndex(config: ChapterLevelConfig, save: SaveModel): number | null {
+        const passedLevelIds = new Set(save.passedLevelIds);
+
+        if (!this.isChapterUnlocked(config.chapterId, save)) {
+            return null;
+        }
+
+        const currentLevelId = this.resolveCurrentLevelId(config, save, passedLevelIds);
+
+        if (currentLevelId === null) {
+            return null;
+        }
+
+        return this.resolveLevelIndexById(config, currentLevelId);
+    }
+
+    public resolveSavedLevelIndex(config: ChapterLevelConfig, save: SaveModel): number | null {
+        const savedLevelId = this.resolveSavedCurrentLevelId(config, save);
+
+        if (savedLevelId === null) {
+            return null;
+        }
+
+        return this.resolveLevelIndexById(config, savedLevelId);
+    }
+
     public buildLevelDisplayModels(config: ChapterLevelConfig, save: SaveModel): readonly ChapterLevelDisplayModel[] {
         const passedLevelIds = new Set(save.passedLevelIds);
-        const isChapterUnlocked = this.isChapterUnlocked(config.chapterId, save);
-        const currentLevelId = isChapterUnlocked ? this.resolveCurrentLevelId(config, save, passedLevelIds) : null;
+        const currentLevelIndex = this.resolveCurrentPlayableLevelIndex(config, save);
+        const currentLevelId = currentLevelIndex === null ? null : config.levels[currentLevelIndex]?.id ?? null;
 
         return config.levels.map((level, levelIndex) => {
             const isPassed = passedLevelIds.has(level.id);
@@ -110,5 +136,11 @@ export class ChapterController {
         }
 
         return null;
+    }
+
+    private resolveLevelIndexById(config: ChapterLevelConfig, levelId: number): number | null {
+        const levelIndex = config.levels.findIndex((level) => level.id === levelId);
+
+        return levelIndex >= 0 ? levelIndex : null;
     }
 }

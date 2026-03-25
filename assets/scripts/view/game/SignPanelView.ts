@@ -14,6 +14,7 @@ export enum SignPanelType {
 const DEFAULT_SIGN_COLOR = new Color(255, 255, 255, 255);
 const SELECTED_SIGN_COLOR = new Color(255, 226, 117, 255);
 const DISABLED_SIGN_COLOR = new Color(190, 190, 190, 255);
+const SELECTED_LABEL_COLOR = new Color(69, 57, 0, 255);
 
 @ccclass('SignPanelView')
 export class SignPanelView extends Component {
@@ -83,6 +84,16 @@ export class SignPanelView extends Component {
         this.isInteractable = isEnabled;
         this.button.interactable = isEnabled;
         this.node.setScale(isSelected ? 1.08 : 1, isSelected ? 1.08 : 1, 1);
+        this.signLabel.color = isSelected
+            ? new Color(
+                SELECTED_LABEL_COLOR.r,
+                SELECTED_LABEL_COLOR.g,
+                SELECTED_LABEL_COLOR.b,
+                SELECTED_LABEL_COLOR.a,
+            )
+            : isEnabled
+              ? new Color(DEFAULT_SIGN_COLOR.r, DEFAULT_SIGN_COLOR.g, DEFAULT_SIGN_COLOR.b, DEFAULT_SIGN_COLOR.a)
+              : new Color(DISABLED_SIGN_COLOR.r, DISABLED_SIGN_COLOR.g, DISABLED_SIGN_COLOR.b, DISABLED_SIGN_COLOR.a);
         this.renderBackground(isSelected, isEnabled);
     }
 
