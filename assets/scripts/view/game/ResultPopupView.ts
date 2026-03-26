@@ -9,10 +9,19 @@ export class ResultPopupView extends Component {
     private titleLabel: Label | null = null;
     private nextButton: Button | null = null;
     private nextButtonLabel: Label | null = null;
+    private hasResolvedReferences: boolean = false;
 
     public onNextTap: (() => void) | null = null;
 
     protected onLoad(): void {
+        this.resolveReferencesIfNeeded();
+    }
+
+    private resolveReferencesIfNeeded(): void {
+        if (this.hasResolvedReferences) {
+            return;
+        }
+
         this.titleLabel = this.node.getChildByName('title')?.getComponent(Label) ?? null;
         this.nextButton = this.node.getChildByName('Button')?.getComponent(Button) ?? null;
         this.nextButtonLabel = this.node.getChildByName('Button')?.getChildByName('Label')?.getComponent(Label) ?? null;
@@ -28,6 +37,8 @@ export class ResultPopupView extends Component {
         if (!this.nextButtonLabel) {
             throw new Error('ResultPopupView: nextButtonLabel is not assigned');
         }
+
+        this.hasResolvedReferences = true;
     }
 
     protected onEnable(): void {
@@ -39,13 +50,7 @@ export class ResultPopupView extends Component {
     }
 
     public show(title: string, nextButtonText: string = '下一关'): void {
-        if (!this.titleLabel) {
-            throw new Error('ResultPopupView.show: titleLabel is not assigned');
-        }
-
-        if (!this.nextButtonLabel) {
-            throw new Error('ResultPopupView.show: nextButtonLabel is not assigned');
-        }
+        this.resolveReferencesIfNeeded();
 
         this.titleLabel.string = title;
         this.nextButtonLabel.string = nextButtonText;

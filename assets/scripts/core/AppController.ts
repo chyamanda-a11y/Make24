@@ -71,7 +71,8 @@ export class AppController extends Component {
         this.homePage = this.resolveReusableHomePageNode(this.homePage);
         this.chapterPage = this.getUsableAssignedNode(this.chapterPage);
         this.gamePage = this.getUsableAssignedNode(this.gamePage);
-        this.deactivatePages(this.homePage, this.chapterPage, this.gamePage);
+        this.applyStartupPageVisibility(this.homePage, this.chapterPage, this.gamePage);
+        this.registerStartupPageIfAvailable();
         this.bindHomeViewIfAvailable();
         this.pagesInitializationTask = this.initializePages();
         void this.pagesInitializationTask.catch((error: unknown) => {
@@ -96,16 +97,33 @@ export class AppController extends Component {
     }
 
     private async initializePages(): Promise<void> {
-        [this.homePage, this.chapterPage, this.gamePage] = await Promise.all([
-            this.resolvePageNode('home', this.homePage),
-            this.resolvePageNode('chapter', this.chapterPage),
-            this.resolvePageNode('game', this.gamePage),
-        ]);
+        const startupPageName = this.getStartupPageName();
+        const startupPageNode = await this.resolvePageNode(startupPageName, this.getAssignedPageNode(startupPageName));
 
-        this.deactivatePages(this.homePage, this.chapterPage, this.gamePage);
+        this.setPageNode(startupPageName, startupPageNode);
+        this.pageRouter.register(startupPageName, startupPageNode);
+
+        const remainingPageNames = (Object.keys(PAGE_PREFAB_PATHS) as PageName[]).filter(
+            (pageName) => pageName !== startupPageName,
+        );
+
+        const remainingPageNodes = await Promise.all(
+            remainingPageNames.map((pageName) => this.resolvePageNode(pageName, this.getAssignedPageNode(pageName))),
+        );
+
+        remainingPageNames.forEach((pageName, index) => {
+            this.setPageNode(pageName, remainingPageNodes[index]);
+        });
+
+        this.applyStartupPageVisibility(this.homePage, this.chapterPage, this.gamePage);
         this.bindViews();
         this.registerPages();
-        this.openPage(this.getStartupPageName());
+        await this.preparePagesForStartup(startupPageName);
+        this.openPage(startupPageName);
+
+        if (startupPageName === 'chapter') {
+            this.chapterView?.scheduleRenderPreparedContent();
+        }
     }
 
     private bindHomeViewIfAvailable(): void {
@@ -183,13 +201,15 @@ export class AppController extends Component {
         return pageNode;
     }
 
-    private deactivatePages(...pages: Array<Node | null>): void {
+    private applyStartupPageVisibility(...pages: Array<Node | null>): void {
+        const startupPageName = this.getStartupPageName();
+
         pages.forEach((pageNode) => {
             if (!pageNode || !isValid(pageNode, true)) {
                 return;
             }
 
-            pageNode.active = false;
+            pageNode.active = pageNode.name === PAGE_NODE_NAMES[startupPageName];
         });
     }
 
@@ -203,6 +223,52 @@ export class AppController extends Component {
                 return 'game';
             default:
                 throw new Error(`AppController.getStartupPageName: unsupported startupPage ${this.startupPage}`);
+        }
+    }
+
+    private registerStartupPageIfAvailable(): void {
+        const startupPageName = this.getStartupPageName();
+
+        if (startupPageName !== 'home') {
+            return;
+        }
+
+        const startupPageNode = this.getAssignedPageNode(startupPageName);
+
+        if (!startupPageNode) {
+            return;
+        }
+
+        this.pageRouter.register(startupPageName, startupPageNode);
+        this.pageRouter.show(startupPageName);
+    }
+
+    private getAssignedPageNode(pageName: PageName): Node | null {
+        switch (pageName) {
+            case 'home':
+                return this.homePage;
+            case 'chapter':
+                return this.chapterPage;
+            case 'game':
+                return this.gamePage;
+            default:
+                throw new Error(`AppController.getAssignedPageNode: unsupported pageName ${String(pageName)}`);
+        }
+    }
+
+    private setPageNode(pageName: PageName, pageNode: Node): void {
+        switch (pageName) {
+            case 'home':
+                this.homePage = pageNode;
+                return;
+            case 'chapter':
+                this.chapterPage = pageNode;
+                return;
+            case 'game':
+                this.gamePage = pageNode;
+                return;
+            default:
+                throw new Error(`AppController.setPageNode: unsupported pageName ${String(pageName)}`);
         }
     }
 
@@ -283,13 +349,7 @@ export class AppController extends Component {
     }
 
     private readonly handleLevelSelected = (selection: ChapterLevelSelection): void => {
-        if (!this.gameView) {
-            throw new Error('AppController.handleLevelSelected: gameView is missing');
-        }
-
-        this.persistCurrentEntry(selection.chapterId, selection.levelId);
-        this.gameView.openLevel(selection.chapterFileName, selection.levelIndex);
-        this.openPage('game');
+        void this.openSelectedLevel(selection);
     };
 
     private readonly handleLevelStarted = (level: LevelModel): void => {
@@ -309,7 +369,7 @@ export class AppController extends Component {
             passedLevelIds,
         });
 
-        this.refreshChapterViewSafely('handleLevelCompleted');
+        void this.prepareChapterViewSafely('handleLevelCompleted', level.chapterId);
     };
 
     private readonly handleHomeStartTap = (): void => {
@@ -324,31 +384,27 @@ export class AppController extends Component {
         try {
             await this.pagesInitializationTask;
 
-            if (!this.gameView) {
-                throw new Error('AppController.openCurrentGameFromHome: gameView is missing');
-            }
-
             const selection = await this.resolveHomeEntrySelection();
 
-            this.gameView.openLevel(selection.chapterFileName, selection.levelIndex);
+            await this.prepareGameView(selection.chapterFileName, selection.levelIndex, true);
             this.openPage('game');
         } catch (error) {
             console.error('AppController.openCurrentGameFromHome failed', error);
-            this.refreshChapterViewSafely('openCurrentGameFromHome');
+            await this.prepareChapterViewSafely('openCurrentGameFromHome');
             this.openPage('chapter');
+            this.chapterView?.scheduleRenderPreparedContent();
         }
     }
 
     private async openChapterFromHome(): Promise<void> {
         try {
             await this.pagesInitializationTask;
+            await this.prepareChapterView();
+            this.openPage('chapter');
+            this.chapterView?.scheduleRenderPreparedContent();
         } catch (error) {
             console.error('AppController.openChapterFromHome failed', error);
-            return;
         }
-
-        this.refreshChapterViewSafely('openChapterFromHome');
-        this.openPage('chapter');
     }
 
     private async resolveHomeEntrySelection(): Promise<GameEntrySelection> {
@@ -375,8 +431,7 @@ export class AppController extends Component {
     };
 
     private readonly handleExitRequested = (): void => {
-        this.refreshChapterViewSafely('handleExitRequested');
-        this.openPage('chapter');
+        void this.openPreparedChapter('handleExitRequested');
     };
 
     private persistCurrentEntry(chapterId: number, levelId: number): void {
@@ -427,11 +482,80 @@ export class AppController extends Component {
         };
     }
 
-    private refreshChapterViewSafely(source: string): void {
+    private async preparePagesForStartup(startupPageName: PageName): Promise<void> {
+        switch (startupPageName) {
+            case 'home': {
+                const selection = await this.resolveHomeEntrySelection();
+
+                await Promise.all([
+                    this.prepareChapterView(),
+                    this.prepareGameView(selection.chapterFileName, selection.levelIndex),
+                ]);
+                return;
+            }
+            case 'chapter':
+                await this.prepareChapterView();
+                return;
+            case 'game': {
+                const selection = await this.resolveHomeEntrySelection();
+
+                await this.prepareGameView(selection.chapterFileName, selection.levelIndex, true);
+                return;
+            }
+            default:
+                throw new Error(`AppController.preparePagesForStartup: unsupported startup page ${startupPageName}`);
+        }
+    }
+
+    private async openSelectedLevel(selection: ChapterLevelSelection): Promise<void> {
         try {
-            this.chapterView?.refresh();
+            this.persistCurrentEntry(selection.chapterId, selection.levelId);
+            await this.prepareGameView(selection.chapterFileName, selection.levelIndex);
+            this.openPage('game');
         } catch (error) {
-            console.error(`AppController.${source}: chapterView.refresh failed`, error);
+            console.error('AppController.openSelectedLevel failed', error);
+        }
+    }
+
+    private async openPreparedChapter(source: string): Promise<void> {
+        try {
+            await this.prepareChapterView();
+            this.openPage('chapter');
+            this.chapterView?.scheduleRenderPreparedContent();
+        } catch (error) {
+            console.error(`AppController.${source}: chapterView.prepareForOpen failed`, error);
+        }
+    }
+
+    private async prepareGameView(
+        chapterFileName: string,
+        levelIndex: number,
+        notifyLevelStarted: boolean = false,
+    ): Promise<void> {
+        if (!this.gameView) {
+            throw new Error('AppController.prepareGameView: gameView is missing');
+        }
+
+        await this.gameView.prepareLevel(chapterFileName, levelIndex, notifyLevelStarted);
+    }
+
+    private async prepareChapterView(chapterId?: number): Promise<void> {
+        if (!this.chapterView) {
+            throw new Error('AppController.prepareChapterView: chapterView is missing');
+        }
+
+        const normalizedChapterId = chapterId === undefined
+            ? undefined
+            : this.chapterController.normalizeChapterId(chapterId);
+
+        await this.chapterView.prepareDataForOpen(normalizedChapterId);
+    }
+
+    private async prepareChapterViewSafely(source: string, chapterId?: number): Promise<void> {
+        try {
+            await this.prepareChapterView(chapterId);
+        } catch (error) {
+            console.error(`AppController.${source}: chapterView.prepareForOpen failed`, error);
         }
     }
 }

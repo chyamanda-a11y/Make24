@@ -2,11 +2,14 @@ import {
     _decorator,
     Color,
     Component,
+    Graphics,
     Label,
     Node,
     ScrollView,
     Sprite,
     UITransform,
+    Vec3,
+    Widget,
 } from 'cc';
 
 import {
@@ -93,25 +96,102 @@ export class ChapterView extends Component {
     private isInitialized: boolean = false;
     private virtualLevelListMetrics: VirtualLevelListMetrics | null = null;
     private renderedStartRow: number = -1;
+    private hasResolvedStaticReferences: boolean = false;
+    private initialContentPosition: Vec3 | null = null;
+    private initialLevelItemPositions: Vec3[] = [];
+    private preparedProgressValueText: string = '';
+    private preparedProgressSuffixText: string = '';
+    private isPreparedRenderScheduled: boolean = false;
 
     protected onLoad(): void {
-        this.validateReferences();
-        this.resolveTabViews();
-        this.resolveLevelItemViews();
-        this.captureVirtualLevelListMetrics();
+        this.resolveStaticReferencesIfNeeded();
     }
 
     protected onEnable(): void {
         this.levelListScrollView?.node.on('scrolling', this.handleLevelListScrolling, this);
+        this.scheduleRenderPreparedContent();
+        this.scheduleOnce(this.ensureScrollViewMaskGraphicsAlpha, 0);
     }
+
+    /**
+     * Mask._createGraphics() forces fillColor.a = 0; with some render paths no stencil pixels
+     * are written, so masked children draw nowhere while hit-test still works. Restore opaque fill.
+     */
+    private readonly ensureScrollViewMaskGraphicsAlpha = (): void => {
+        const viewNode = this.levelListContent?.parent;
+        const graphics = viewNode?.getComponent(Graphics) ?? null;
+        if (!graphics?.enabled) {
+            return;
+        }
+
+        const fill = graphics.fillColor.clone();
+        if (fill.a < 255) {
+            fill.a = 255;
+            graphics.fillColor = fill;
+        }
+
+        const tint = graphics.color.clone();
+        if (tint.a < 255) {
+            tint.a = 255;
+            graphics.color = tint;
+        }
+    };
 
     protected onDisable(): void {
         this.levelListScrollView?.node.off('scrolling', this.handleLevelListScrolling, this);
+        this.unschedule(this.runScheduledPreparedRender);
+        this.isPreparedRenderScheduled = false;
         this.renderedStartRow = -1;
     }
 
     protected start(): void {
-        void this.initialize();
+        if (this.isInitialized) {
+            return;
+        }
+
+        void this.prepareForOpen();
+    }
+
+    public async prepareForOpen(chapterId?: ChapterId): Promise<void> {
+        await this.prepareDataForOpen(chapterId);
+        this.scheduleRenderPreparedContent();
+    }
+
+    public async prepareDataForOpen(chapterId?: ChapterId): Promise<void> {
+        this.resolveStaticReferencesIfNeeded();
+        const save = this.saveService.load();
+
+        this.selectedChapterId = this.controller.normalizeChapterId(chapterId ?? save.currentChapterId);
+        await this.prepareSelectedChapterData();
+        this.isInitialized = true;
+    }
+
+    public renderPreparedContent(): void {
+        if (!this.node.activeInHierarchy || this.currentLevelDisplayModels.length === 0) {
+            return;
+        }
+
+        this.resolveStaticReferencesIfNeeded();
+        this.syncVirtualLevelListLayout();
+        this.ensureVirtualLevelItemCapacity();
+        this.renderTabs();
+        this.progressValueLabel!.string = this.preparedProgressValueText;
+        this.progressSuffixLabel!.string = this.preparedProgressSuffixText;
+        this.levelListScrollView!.stopAutoScroll();
+        this.updateVirtualLevelListContentSize(this.currentLevelDisplayModels.length);
+        this.renderedStartRow = -1;
+        this.restoreInitialContentPosition();
+        this.levelListScrollView!.scrollToTop(0);
+        this.refreshVisibleLevelItems(0);
+    }
+
+    public scheduleRenderPreparedContent(): void {
+        if (this.isPreparedRenderScheduled) {
+            return;
+        }
+
+        this.isPreparedRenderScheduled = true;
+        this.scheduleOnce(this.runScheduledPreparedRender, 0);
     }
 
     public refresh(): void {
@@ -119,16 +199,25 @@ export class ChapterView extends Component {
             return;
         }
 
-        void this.renderSelectedChapter();
+        void this.prepareForOpen(this.selectedChapterId);
     }
 
-    private async initialize(): Promise<void> {
-        const save = this.saveService.load();
+    private resolveStaticReferencesIfNeeded(): void {
+        if (this.hasResolvedStaticReferences) {
+            return;
+        }
 
-        this.selectedChapterId = this.controller.normalizeChapterId(save.currentChapterId);
-        this.isInitialized = true;
-        void this.renderSelectedChapter();
+        this.validateReferences();
+        this.resolveTabViews();
+        this.resolveLevelItemViews();
+        this.initialContentPosition = this.levelListContent?.position.clone() ?? null;
+        this.hasResolvedStaticReferences = true;
     }
+
+    private readonly runScheduledPreparedRender = (): void => {
+        this.isPreparedRenderScheduled = false;
+        this.renderPreparedContent();
+    };
 
     private validateReferences(): void {
         const chapterTabs = this.controller.getChapterTabs();
@@ -212,6 +301,48 @@ export class ChapterView extends Component {
 
             return leftView.node.position.x - rightView.node.position.x;
         });
+        this.initialLevelItemPositions = this.levelItemViews.map((levelItemView) => levelItemView.node.position.clone());
+    }
+
+    private syncVirtualLevelListLayout(): void {
+        this.updateWidgetAlignment(this.node);
+        this.updateWidgetAlignment(this.levelListScrollView?.node ?? null);
+        this.updateWidgetAlignment(this.levelListContent?.parent ?? null);
+        this.updateWidgetAlignment(this.levelListContent);
+        this.restoreInitialContentPosition();
+        this.restoreInitialLevelItemPositions();
+        this.captureVirtualLevelListMetrics();
+    }
+
+    private updateWidgetAlignment(targetNode: Node | null): void {
+        targetNode?.getComponent(Widget)?.updateAlignment();
+    }
+
+    private restoreInitialLevelItemPositions(): void {
+        if (this.initialLevelItemPositions.length !== this.levelItemViews.length) {
+            throw new Error('ChapterView.restoreInitialLevelItemPositions: initial level item positions are missing');
+        }
+
+        this.levelItemViews.forEach((levelItemView, index) => {
+            const initialPosition = this.initialLevelItemPositions[index];
+
+            if (!initialPosition) {
+                throw new Error(`ChapterView.restoreInitialLevelItemPositions: missing initial position for index ${index}`);
+            }
+
+            levelItemView.node.active = true;
+            levelItemView.node.setPosition(initialPosition.x, initialPosition.y, initialPosition.z);
+        });
+    }
+
+    private restoreInitialContentPosition(): void {
+        const initialPosition = this.initialContentPosition;
+
+        if (!initialPosition || !this.levelListContent) {
+            throw new Error('ChapterView.restoreInitialContentPosition: initial content position is missing');
+        }
+
+        this.levelListContent.setPosition(initialPosition.x, initialPosition.y, initialPosition.z);
     }
 
     private captureVirtualLevelListMetrics(): void {
@@ -286,7 +417,7 @@ export class ChapterView extends Component {
         };
     }
 
-    private async renderSelectedChapter(): Promise<void> {
+    private async prepareSelectedChapterData(): Promise<void> {
         const renderVersion = ++this.renderVersion;
         const save = this.saveService.load();
         const config = await this.loadChapterConfig(this.selectedChapterId);
@@ -296,7 +427,6 @@ export class ChapterView extends Component {
         }
 
         const levelDisplayModels = this.controller.buildLevelDisplayModels(config, save);
-        this.ensureVirtualLevelItemCapacity();
 
         if (renderVersion !== this.renderVersion) {
             return;
@@ -305,8 +435,8 @@ export class ChapterView extends Component {
         const clearedCount = this.controller.getProgressCount(config, save);
 
         this.currentLevelDisplayModels = levelDisplayModels;
-        this.progressValueLabel!.string = `${clearedCount}/${config.levels.length}`;
-        this.progressSuffixLabel!.string = 'Cleared';
+        this.preparedProgressValueText = `${clearedCount}/${config.levels.length}`;
+        this.preparedProgressSuffixText = 'Cleared';
         this.levelSelections.clear();
 
         levelDisplayModels.forEach((levelDisplayModel) => {
@@ -317,12 +447,7 @@ export class ChapterView extends Component {
             this.levelSelections.set(levelDisplayModel.levelId, this.createLevelSelection(config, levelDisplayModel));
         });
 
-        this.renderTabs();
-        this.levelListScrollView!.stopAutoScroll();
-        this.updateVirtualLevelListContentSize(levelDisplayModels.length);
         this.renderedStartRow = -1;
-        this.levelListScrollView!.scrollToTop(0);
-        this.refreshVisibleLevelItems();
     }
 
     private async loadChapterConfig(chapterId: ChapterId): Promise<ChapterLevelConfig> {
@@ -346,8 +471,7 @@ export class ChapterView extends Component {
             return;
         }
 
-        this.selectedChapterId = chapterId;
-        this.refresh();
+        void this.prepareForOpen(chapterId);
     }
 
     private readonly handleLevelTap = (levelId: number): void => {
@@ -439,7 +563,7 @@ export class ChapterView extends Component {
         contentTransform.setContentSize(contentTransform.contentSize.width, nextHeight);
     }
 
-    private refreshVisibleLevelItems(): void {
+    private refreshVisibleLevelItems(forcedStartRow?: number): void {
         const metrics = this.virtualLevelListMetrics;
 
         if (!metrics) {
@@ -448,7 +572,8 @@ export class ChapterView extends Component {
 
         const totalLevelCount = this.currentLevelDisplayModels.length;
         const totalRowCount = this.getTotalRowCount(totalLevelCount);
-        const startRow = Math.min(this.getVisibleStartRow(totalRowCount), Math.max(0, totalRowCount - metrics.pooledRowCount));
+        const resolvedStartRow = forcedStartRow ?? this.getVisibleStartRow(totalRowCount);
+        const startRow = Math.min(resolvedStartRow, Math.max(0, totalRowCount - metrics.pooledRowCount));
 
         if (startRow === this.renderedStartRow && totalLevelCount > 0) {
             return;
@@ -477,7 +602,25 @@ export class ChapterView extends Component {
             levelItemView.node.active = true;
             levelItemView.node.setPosition(positionX, positionY, levelItemView.node.position.z);
             levelItemView.onTap = levelDisplayModel.isPlayable ? this.handleLevelTap : null;
-            levelItemView.render(this.toLevelItemRenderData(levelDisplayModel));
+
+            try {
+                levelItemView.render(this.toLevelItemRenderData(levelDisplayModel));
+            } catch (error) {
+                console.error('ChapterView.refreshVisibleLevelItems: failed to render level item', {
+                    slotIndex,
+                    rowIndex,
+                    columnIndex,
+                    levelIndex,
+                    levelId: levelDisplayModel.levelId,
+                    displayNumber: levelDisplayModel.displayNumber,
+                    status: levelDisplayModel.status,
+                    nodeName: levelItemView.node.name,
+                    positionX,
+                    positionY,
+                    error,
+                });
+                throw error;
+            }
         });
 
         this.renderedStartRow = startRow;
@@ -517,10 +660,11 @@ export class ChapterView extends Component {
     }
 
     private getLevelListViewportTransform(): UITransform {
-        const viewportTransform = this.levelListScrollView?.node.getComponent(UITransform) ?? null;
+        const viewportNode = this.levelListContent?.parent ?? this.levelListScrollView?.node ?? null;
+        const viewportTransform = viewportNode?.getComponent(UITransform) ?? null;
 
         if (!viewportTransform) {
-            throw new Error('ChapterView.getLevelListViewportTransform: levelListScrollView node is missing UITransform');
+            throw new Error('ChapterView.getLevelListViewportTransform: viewport node is missing UITransform');
         }
 
         return viewportTransform;

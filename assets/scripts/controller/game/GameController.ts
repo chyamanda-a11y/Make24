@@ -97,8 +97,7 @@ export class GameController {
         }
 
         this.model.currentNumbers = [...lastRecord.numbers];
-        this.model.selectedNumberIndices = [...lastRecord.selectedNumberIndices];
-        this.model.selectedOperator = lastRecord.selectedOperator;
+        this.clearSelection();
         this.model.hasCompletedLevel = false;
         return true;
     }

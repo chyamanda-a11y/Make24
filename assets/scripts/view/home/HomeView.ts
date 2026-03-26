@@ -1,14 +1,10 @@
 import {
     _decorator,
-    Color,
     Component,
     EventTouch,
     Layers,
     Node,
-    Sprite,
-    SpriteFrame,
     UITransform,
-    resources,
 } from 'cc';
 
 import { AudioUtil } from '../../core/AudioUtil';
@@ -18,112 +14,6 @@ const { ccclass } = _decorator;
 const DESIGN_WIDTH = 720;
 const DESIGN_HEIGHT = 1280;
 const CONTAINER_NAME = 'container';
-
-const COLORS = {
-    background: new Color(18, 17, 4, 255),
-    topBar: new Color(12, 11, 4, 210),
-    primaryText: new Color(255, 239, 167, 255),
-    startShadow: new Color(255, 217, 98, 92),
-    settingsTint: new Color(58, 127, 72, 255),
-    heroDecor: new Color(103, 95, 13, 52),
-    bottomSettingIcon: new Color(237, 247, 229, 255),
-};
-
-interface SpriteConfig {
-    readonly resourcePath: string;
-    readonly color?: Color;
-    readonly type?: Sprite.Type;
-    readonly sizeMode?: Sprite.SizeMode;
-}
-
-interface SpriteBinding {
-    readonly path: string[];
-    readonly config: SpriteConfig;
-}
-
-const SPRITE_BINDINGS: ReadonlyArray<SpriteBinding> = [
-    {
-        path: ['Background'],
-        config: {
-            resourcePath: 'sprites/main/black_bg',
-            color: COLORS.background,
-            type: Sprite.Type.SLICED,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['TopBar'],
-        config: {
-            resourcePath: 'sprites/main/black_bg',
-            color: COLORS.topBar,
-            type: Sprite.Type.SLICED,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['TopBar', 'TopSettingButton', 'Icon'],
-        config: {
-            resourcePath: 'sprites/cover/setting_icon',
-            color: COLORS.primaryText,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['HeroDecor'],
-        config: {
-            resourcePath: 'sprites/cover/dector_icon',
-            color: COLORS.heroDecor,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['ActionGroup', 'StartGlow'],
-        config: {
-            resourcePath: 'sprites/main/tip_btn_bg',
-            color: COLORS.startShadow,
-            type: Sprite.Type.SLICED,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['ActionGroup', 'BottomSettingButton'],
-        config: {
-            resourcePath: 'sprites/main/green_btn',
-            color: COLORS.settingsTint,
-            type: Sprite.Type.SLICED,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['ActionGroup', 'BottomSettingButton', 'Icon'],
-        config: {
-            resourcePath: 'sprites/cover/setting_icon',
-            color: COLORS.bottomSettingIcon,
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['PlusDecor'],
-        config: {
-            resourcePath: 'sprites/cover/plus_dector',
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['MultiplyDecor'],
-        config: {
-            resourcePath: 'sprites/cover/multy_icon',
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-    {
-        path: ['ToyDecor'],
-        config: {
-            resourcePath: 'sprites/cover/toy_icon',
-            sizeMode: Sprite.SizeMode.CUSTOM,
-        },
-    },
-];
 
 @ccclass('HomeView')
 export class HomeView extends Component {
@@ -136,15 +26,12 @@ export class HomeView extends Component {
     private topSettingButton: Node | null = null;
     private bottomSettingButton: Node | null = null;
 
-    private readonly spriteFrameCache: Map<string, SpriteFrame> = new Map();
-    private readonly spriteFrameTasks: Map<string, Promise<SpriteFrame>> = new Map();
     private readonly pressedButtons: Set<Node> = new Set();
     private runtimeEventsBound: boolean = false;
 
     protected onLoad(): void {
         this.ensureRootTransform();
         this.resolveButtons();
-        void this.loadSpriteFramesSafely();
     }
 
     protected onEnable(): void {
@@ -274,67 +161,6 @@ export class HomeView extends Component {
 
         this.pressedButtons.delete(buttonNode);
         return true;
-    }
-
-    private async loadSpriteFramesSafely(): Promise<void> {
-        try {
-            await Promise.all(SPRITE_BINDINGS.map(({ path, config }) => this.assignSpriteFrameIfExists(path, config)));
-        } catch (error) {
-            console.warn('HomeView: failed to load one or more cover sprite frames', error);
-        }
-    }
-
-    private async assignSpriteFrameIfExists(path: string[], config: SpriteConfig): Promise<void> {
-        const node = this.findRuntimeNode(path);
-
-        if (!node) {
-            return;
-        }
-
-        const sprite = node.getComponent(Sprite);
-
-        if (!sprite) {
-            return;
-        }
-
-        sprite.spriteFrame = await this.loadSpriteFrame(config.resourcePath);
-        sprite.sizeMode = config.sizeMode ?? Sprite.SizeMode.CUSTOM;
-        sprite.type = config.type ?? Sprite.Type.SIMPLE;
-        sprite.color = config.color ?? Color.WHITE;
-    }
-
-    private async loadSpriteFrame(resourcePath: string): Promise<SpriteFrame> {
-        const cachedSpriteFrame = this.spriteFrameCache.get(resourcePath);
-
-        if (cachedSpriteFrame) {
-            return cachedSpriteFrame;
-        }
-
-        const loadingTask = this.spriteFrameTasks.get(resourcePath);
-
-        if (loadingTask) {
-            return loadingTask;
-        }
-
-        const task = new Promise<SpriteFrame>((resolve, reject) => {
-            resources.load(`${resourcePath}/spriteFrame`, SpriteFrame, (error, asset) => {
-                if (error || !asset) {
-                    reject(error ?? new Error(`Missing sprite frame: ${resourcePath}`));
-                    return;
-                }
-
-                this.spriteFrameCache.set(resourcePath, asset);
-                resolve(asset);
-            });
-        });
-
-        this.spriteFrameTasks.set(resourcePath, task);
-
-        try {
-            return await task;
-        } finally {
-            this.spriteFrameTasks.delete(resourcePath);
-        }
     }
 
     private findRuntimeNode(path: string[]): Node | null {

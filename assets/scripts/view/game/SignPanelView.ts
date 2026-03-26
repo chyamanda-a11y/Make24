@@ -32,8 +32,17 @@ export class SignPanelView extends Component {
     private selectedBackgroundSprite: Sprite | null = null;
     private button: Button | null = null;
     private isInteractable: boolean = true;
+    private hasResolvedReferences: boolean = false;
 
     protected onLoad(): void {
+        this.resolveReferencesIfNeeded();
+    }
+
+    private resolveReferencesIfNeeded(): void {
+        if (this.hasResolvedReferences) {
+            return;
+        }
+
         this.signLabel = this.node.getChildByName('sign')?.getComponent(Label) ?? null;
         this.rootBackgroundSprite = this.node.getComponent(Sprite);
         this.normalBackgroundNode = this.node.getChildByName('normalBg');
@@ -51,6 +60,7 @@ export class SignPanelView extends Component {
         }
 
         this.signLabel.string = this.getDisplayOperator();
+        this.hasResolvedReferences = true;
     }
 
     protected onEnable(): void {
@@ -77,9 +87,7 @@ export class SignPanelView extends Component {
     }
 
     public render(isSelected: boolean, isEnabled: boolean): void {
-        if (!this.signLabel || !this.button) {
-            throw new Error('SignPanelView.render: panel references are missing');
-        }
+        this.resolveReferencesIfNeeded();
 
         this.signLabel.string = this.getDisplayOperator();
         this.isInteractable = isEnabled;

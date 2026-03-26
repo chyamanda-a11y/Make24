@@ -275,8 +275,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 175.99125085149862,
-      "height": 50.400000000000006
+      "width": 175.99998837425593,
+      "height": 50.4
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -314,7 +314,7 @@
     "_string": "解法提示",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 50.462500000000006,
+    "_actualFontSize": 46.2,
     "_fontSize": 44,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
@@ -491,8 +491,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 111.99128278269754,
-      "height": 50.400000000000006
+      "width": 111.9999767485119,
+      "height": 50.4
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -530,7 +530,7 @@
     "_string": "我知道了",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 32.112500000000004,
+    "_actualFontSize": 29.400000000000002,
     "_fontSize": 28,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
@@ -851,7 +851,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 84.50247200698229,
+      "width": 84.51171875,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -890,7 +890,7 @@
     "_string": "label",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 45.875,
+    "_actualFontSize": 42,
     "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 40,

@@ -20,8 +20,17 @@ export class NumPanelView extends Component {
     private selectedBackgroundSprite: Sprite | null = null;
     private button: Button | null = null;
     private isInteractable: boolean = true;
+    private hasResolvedReferences: boolean = false;
 
     protected onLoad(): void {
+        this.resolveReferencesIfNeeded();
+    }
+
+    private resolveReferencesIfNeeded(): void {
+        if (this.hasResolvedReferences) {
+            return;
+        }
+
         this.valueLabel = this.node.getChildByName('num')?.getComponent(Label) ?? null;
         this.rootBackgroundSprite = this.node.getComponent(Sprite);
         this.normalBackgroundNode = this.node.getChildByName('normalBg');
@@ -37,6 +46,8 @@ export class NumPanelView extends Component {
         if (!this.rootBackgroundSprite && (!this.normalBackgroundSprite || !this.selectedBackgroundSprite)) {
             throw new Error('NumPanelView: background sprites are missing');
         }
+
+        this.hasResolvedReferences = true;
     }
 
     protected onEnable(): void {
@@ -48,9 +59,7 @@ export class NumPanelView extends Component {
     }
 
     public render(value: number | null, isSelected: boolean, isCompleted: boolean): void {
-        if (!this.valueLabel || !this.button) {
-            throw new Error('NumPanelView.render: panel references are missing');
-        }
+        this.resolveReferencesIfNeeded();
 
         const isVisible = value !== null;
         this.node.active = isVisible;

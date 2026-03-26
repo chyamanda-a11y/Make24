@@ -23,8 +23,7 @@ const RESULT_POPUP_PREFAB_PATH = 'prefabs/ResultPupUI';
 const CONTROL_BUTTON_PRESS_SCALE = 0.94;
 const CONTROL_BUTTON_PRESS_DURATION = 0.08;
 const CONTROL_BUTTON_RELEASE_DURATION = 0.1;
-const HEADER_TITLE_PATH = 'Header/Level 24: MasterNode';
-const HEADER_LEVEL_NUMBER_PATH = '24Node';
+const HEADER_STAGE_PATH = 'Header/Level 24: MasterNode';
 const CHAPTER_TITLE_BY_ID: Readonly<Record<number, string>> = {
     1: 'Junior',
     2: 'Middle',
@@ -57,10 +56,7 @@ export class GameView extends Component {
     private readonly exitButton: Node | null = null;
 
     @property(Node)
-    private readonly headerTitleNode: Node | null = null;
-
-    @property(Node)
-    private readonly headerLevelNumberNode: Node | null = null;
+    private readonly headerStageNode: Node | null = null;
 
     @property
     private levelFileName: string = 'chapter_01';
@@ -88,16 +84,11 @@ export class GameView extends Component {
     private popupInitializationPromise: Promise<void> | null = null;
     private reportedCompletedLevelId: number | null = null;
     private resolvedExitButton: Node | null = null;
-    private headerTitleLabel: Label | null = null;
-    private headerLevelNumberLabel: Label | null = null;
+    private headerStageLabel: Label | null = null;
+    private hasResolvedStaticReferences: boolean = false;
 
     protected onLoad(): void {
-        this.numPanelViews = this.resolveNumPanels();
-        this.signPanelViews = this.resolveSignPanels();
-        this.resolveControlButtons();
-        this.resolveHeaderLabels();
-        this.validatePanelReferences();
-        this.refreshControlButtons();
+        this.resolveStaticReferencesIfNeeded();
     }
 
     protected onEnable(): void {
@@ -106,7 +97,16 @@ export class GameView extends Component {
     }
 
     protected start(): void {
-        void this.initialize();
+        if (this.isInitialized) {
+            return;
+        }
+
+        const initialRequest = this.pendingLevelRequest ?? {
+            chapterFileName: this.levelFileName,
+            levelIndex: 0,
+        };
+
+        void this.prepareLevel(initialRequest.chapterFileName, initialRequest.levelIndex, true);
     }
 
     protected onDisable(): void {
@@ -114,30 +114,49 @@ export class GameView extends Component {
         this.resetControlButtonScales();
     }
 
-    private async initialize(): Promise<void> {
+    public async prepareLevel(chapterFileName: string, levelIndex: number, notifyLevelStarted: boolean = false): Promise<void> {
+        const request: LevelRequest = {
+            chapterFileName,
+            levelIndex,
+        };
+        this.pendingLevelRequest = request;
+
+        this.resolveStaticReferencesIfNeeded();
         await this.ensurePopupViews();
-        await this.applyLevelRequest(this.pendingLevelRequest ?? {
-            chapterFileName: this.levelFileName,
-            levelIndex: 0,
-        });
+        await this.applyLevelRequest(request, notifyLevelStarted);
         this.isInitialized = true;
     }
 
     public openLevel(chapterFileName: string, levelIndex: number): void {
-        this.pendingLevelRequest = {
+        const request: LevelRequest = {
             chapterFileName,
             levelIndex,
         };
+        this.pendingLevelRequest = request;
 
         if (!this.isInitialized) {
             return;
         }
 
-        void this.applyLevelRequest(this.pendingLevelRequest);
+        void this.prepareLevel(chapterFileName, levelIndex, true);
     }
 
     public isCurrentLevelLastInChapter(): boolean {
         return !this.hasNextLevel();
+    }
+
+    private resolveStaticReferencesIfNeeded(): void {
+        if (this.hasResolvedStaticReferences) {
+            return;
+        }
+
+        this.numPanelViews = this.resolveNumPanels();
+        this.signPanelViews = this.resolveSignPanels();
+        this.resolveControlButtons();
+        this.resolveHeaderLabels();
+        this.validatePanelReferences();
+        this.refreshControlButtons();
+        this.hasResolvedStaticReferences = true;
     }
 
     private async loadChapterLevels(chapterFileName: string): Promise<readonly LevelModel[]> {
@@ -162,7 +181,7 @@ export class GameView extends Component {
         await this.popupInitializationPromise;
     }
 
-    private async applyLevelRequest(request: LevelRequest): Promise<void> {
+    private async applyLevelRequest(request: LevelRequest, notifyLevelStarted: boolean): Promise<void> {
         const requestVersion = ++this.loadRequestVersion;
         const chapterLevels = await this.loadChapterLevels(request.chapterFileName);
 
@@ -172,7 +191,7 @@ export class GameView extends Component {
 
         this.levelFileName = request.chapterFileName;
         this.chapterLevels = chapterLevels;
-        this.startLevelByIndex(this.sanitizeLevelIndex(request.levelIndex));
+        this.startLevelByIndex(this.sanitizeLevelIndex(request.levelIndex), notifyLevelStarted);
     }
 
     private sanitizeLevelIndex(levelIndex: number): number {
@@ -224,7 +243,7 @@ export class GameView extends Component {
         });
     }
 
-    private startLevelByIndex(index: number): void {
+    private startLevelByIndex(index: number, notifyLevelStarted: boolean = true): void {
         const level = this.chapterLevels[index];
 
         if (!level) {
@@ -235,7 +254,9 @@ export class GameView extends Component {
         this.reportedCompletedLevelId = null;
         this.hideTransientPopups();
         this.controller.startLevel(level);
-        this.onLevelStarted?.(level);
+        if (notifyLevelStarted) {
+            this.onLevelStarted?.(level);
+        }
         this.render();
     }
 
@@ -416,8 +437,7 @@ export class GameView extends Component {
     }
 
     private resolveHeaderLabels(): void {
-        this.headerTitleLabel = this.resolveHeaderLabel(this.headerTitleNode, HEADER_TITLE_PATH);
-        this.headerLevelNumberLabel = this.resolveHeaderLabel(this.headerLevelNumberNode, HEADER_LEVEL_NUMBER_PATH);
+        this.headerStageLabel = this.resolveHeaderLabel(this.headerStageNode, HEADER_STAGE_PATH);
     }
 
     private refreshControlButtons(): void {
@@ -510,13 +530,10 @@ export class GameView extends Component {
     private renderHeader(level: LevelModel | null): void {
         const displayLevelNumber = level ? `${this.currentLevelIndex + 1}` : '';
         const chapterTitle = level ? this.getChapterTitle(level.chapterId) : '';
+        const headerText = level ? `Level ${displayLevelNumber}: ${chapterTitle}` : '';
 
-        if (this.headerTitleLabel) {
-            this.headerTitleLabel.string = level ? `Level ${displayLevelNumber}: ${chapterTitle}` : '';
-        }
-
-        if (this.headerLevelNumberLabel) {
-            this.headerLevelNumberLabel.string = displayLevelNumber;
+        if (this.headerStageLabel) {
+            this.headerStageLabel.string = headerText;
         }
     }
 
@@ -637,7 +654,7 @@ export class GameView extends Component {
 
     private handleResultNextTap(): void {
         const nextLevelIndex = this.hasNextLevel() ? this.currentLevelIndex + 1 : 0;
-        this.startLevelByIndex(nextLevelIndex);
+        this.startLevelByIndex(nextLevelIndex, true);
     }
 
     private resolveHeaderLabel(headerNode: Node | null, fallbackPath: string): Label | null {

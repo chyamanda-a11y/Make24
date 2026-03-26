@@ -78,10 +78,10 @@ export class LevelItemView extends Component {
     private levelId: number = 0;
     private isPlayable: boolean = false;
     private defaultScale: Vec3 = new Vec3(1, 1, 1);
+    private hasResolvedReferences: boolean = false;
 
     protected onLoad(): void {
-        this.defaultScale = new Vec3(this.node.scale.x, this.node.scale.y, this.node.scale.z);
-        this.validateReferences();
+        this.resolveReferencesIfNeeded();
     }
 
     protected onEnable(): void {
@@ -98,7 +98,7 @@ export class LevelItemView extends Component {
     }
 
     public render(renderData: LevelItemRenderData): void {
-        this.validateReferences();
+        this.resolveReferencesIfNeeded();
 
         this.levelId = renderData.levelId;
         this.isPlayable = renderData.isPlayable;
@@ -107,19 +107,25 @@ export class LevelItemView extends Component {
         switch (renderData.status) {
             case 'passed':
                 this.renderPassedState();
-                return;
+                break;
             case 'current':
                 this.renderCurrentState();
-                return;
+                break;
             case 'locked':
                 this.renderLockedState();
-                return;
+                break;
             default:
                 throw new Error(`LevelItemView.render: unsupported status ${renderData.status}`);
         }
     }
 
-    private validateReferences(): void {
+    private resolveReferencesIfNeeded(): void {
+        if (this.hasResolvedReferences) {
+            return;
+        }
+
+        this.defaultScale = new Vec3(this.node.scale.x, this.node.scale.y, this.node.scale.z);
+
         if (!this.outerFrameSprite || !this.middleFrameSprite || !this.backgroundSprite || !this.levelLabel || !this.statusIconSprite || !this.actionLabel) {
             throw new Error('LevelItemView: ui references are not assigned');
         }
@@ -134,6 +140,8 @@ export class LevelItemView extends Component {
         ) {
             throw new Error('LevelItemView: sprite frame references are not assigned');
         }
+
+        this.hasResolvedReferences = true;
     }
 
     private renderPassedState(): void {

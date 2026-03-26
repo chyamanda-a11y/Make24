@@ -32,13 +32,10 @@
       },
       {
         "__id__": 208
-      },
-      {
-        "__id__": 210
       }
     ],
     "_prefab": {
-      "__id__": 212
+      "__id__": 210
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3983,48 +3980,6 @@
     "fileId": "60169J4YpAIKmYFsKk9E4O"
   },
   {
-    "__type__": "cc.Sprite",
-    "_name": "",
-    "_objFlags": 0,
-    "__editorExtras__": {},
-    "node": {
-      "__id__": 1
-    },
-    "_enabled": true,
-    "__prefab": {
-      "__id__": 207
-    },
-    "_customMaterial": null,
-    "_srcBlendFactor": 2,
-    "_dstBlendFactor": 4,
-    "_color": {
-      "__type__": "cc.Color",
-      "r": 16,
-      "g": 15,
-      "b": 0,
-      "a": 255
-    },
-    "_spriteFrame": null,
-    "_type": 1,
-    "_fillType": 0,
-    "_sizeMode": 0,
-    "_fillCenter": {
-      "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
-    },
-    "_fillStart": 0,
-    "_fillRange": 0,
-    "_isTrimmedMode": true,
-    "_useGrayscale": false,
-    "_atlas": null,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.CompPrefabInfo",
-    "fileId": "bewvAK+0VO4rz9a4yK+LcI"
-  },
-  {
     "__type__": "cc.Widget",
     "_name": "",
     "_objFlags": 0,
@@ -4034,7 +3989,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 209
+      "__id__": 207
     },
     "_alignFlags": 45,
     "_target": null,
@@ -4070,7 +4025,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 211
+      "__id__": 209
     },
     "numPanels": [
       {
@@ -4112,8 +4067,9 @@
     "exitButton": {
       "__id__": 18
     },
-    "headerTitleNode": null,
-    "headerLevelNumberNode": null,
+    "headerStageNode": {
+      "__id__": 10
+    },
     "levelFileName": "chapter_01",
     "_id": ""
   },

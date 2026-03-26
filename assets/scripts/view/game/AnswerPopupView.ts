@@ -8,8 +8,17 @@ const { ccclass } = _decorator;
 export class AnswerPopupView extends Component {
     private answerLabel: Label | null = null;
     private closeButton: Button | null = null;
+    private hasResolvedReferences: boolean = false;
 
     protected onLoad(): void {
+        this.resolveReferencesIfNeeded();
+    }
+
+    private resolveReferencesIfNeeded(): void {
+        if (this.hasResolvedReferences) {
+            return;
+        }
+
         this.answerLabel = this.node.getChildByName('formulaBg')?.getChildByName('tip')?.getComponent(Label) ?? null;
         this.closeButton = this.node.getChildByName('Button')?.getComponent(Button) ?? null;
 
@@ -20,6 +29,8 @@ export class AnswerPopupView extends Component {
         if (!this.closeButton) {
             throw new Error('AnswerPopupView: closeButton is not assigned');
         }
+
+        this.hasResolvedReferences = true;
     }
 
     protected onEnable(): void {
@@ -31,9 +42,7 @@ export class AnswerPopupView extends Component {
     }
 
     public show(answerExpression: string): void {
-        if (!this.answerLabel) {
-            throw new Error('AnswerPopupView.show: answerLabel is not assigned');
-        }
+        this.resolveReferencesIfNeeded();
 
         this.answerLabel.string = this.formatExpressionForDisplay(answerExpression);
         this.node.active = true;

@@ -9,8 +9,23 @@ export interface ChapterLevelConfig {
 }
 
 export class LevelService {
+    private static readonly configCache: Map<string, ChapterLevelConfig> = new Map();
+    private static readonly configTasks: Map<string, Promise<ChapterLevelConfig>> = new Map();
+
     public async loadChapterConfig(chapterFileName: string): Promise<ChapterLevelConfig> {
-        return new Promise<ChapterLevelConfig>((resolve, reject) => {
+        const cachedConfig = LevelService.configCache.get(chapterFileName);
+
+        if (cachedConfig) {
+            return cachedConfig;
+        }
+
+        const loadingTask = LevelService.configTasks.get(chapterFileName);
+
+        if (loadingTask) {
+            return loadingTask;
+        }
+
+        const task = new Promise<ChapterLevelConfig>((resolve, reject) => {
             resources.load(`config/levels/${chapterFileName}`, JsonAsset, (error, asset) => {
                 if (error) {
                     reject(new Error(`LevelService.loadChapterConfig failed: ${error.message}`));
@@ -22,8 +37,19 @@ export class LevelService {
                     return;
                 }
 
-                resolve(asset.json as ChapterLevelConfig);
+                const config = asset.json as ChapterLevelConfig;
+
+                LevelService.configCache.set(chapterFileName, config);
+                resolve(config);
             });
         });
+
+        LevelService.configTasks.set(chapterFileName, task);
+
+        try {
+            return await task;
+        } finally {
+            LevelService.configTasks.delete(chapterFileName);
+        }
     }
 }

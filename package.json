@@ -1,6 +1,9 @@
 {
   "name": "Make24",
   "uuid": "7b360baf-82a7-4c76-9940-a91c69284115",
+  "scripts": {
+    "audio:mp3": "node tools/audio/convert-wav-to-mp3.js"
+  },
   "creator": {
     "version": "3.8.8"
   }
