@@ -359,7 +359,7 @@ export class AppController extends Component {
     private readonly handleLevelCompleted = (level: LevelModel): void => {
         const save = this.saveService.load();
         const passedLevelIds = Array.from(new Set([...save.passedLevelIds, level.id]));
-        const unlockedChapterId = this.resolveUnlockedChapterId(level.chapterId, save.unlockedChapterId);
+        const unlockedChapterId = this.resolveUnlockedChapterId();
 
         this.saveService.save({
             ...save,
@@ -444,26 +444,17 @@ export class AppController extends Component {
         });
     }
 
-    private resolveUnlockedChapterId(chapterId: number, currentUnlockedChapterId: number): number {
-        const maxChapterId = this.chapterController.getMaxChapterId();
-        const hasCompletedChapter = this.gameView?.isCurrentLevelLastInChapter() ?? false;
-
-        if (!hasCompletedChapter) {
-            return currentUnlockedChapterId;
-        }
-
-        return Math.min(Math.max(currentUnlockedChapterId, chapterId + 1), maxChapterId);
+    private resolveUnlockedChapterId(): number {
+        return this.chapterController.getMaxChapterId();
     }
 
     private buildHomeEntryChapterIds(save: SaveModel): readonly number[] {
-        const maxUnlockedChapterId = this.chapterController.normalizeChapterId(Math.max(save.unlockedChapterId, 1));
-        const preferredChapterId = this.chapterController.normalizeChapterId(
-            Math.min(Math.max(save.currentChapterId, 1), maxUnlockedChapterId),
-        );
+        const maxChapterId = this.chapterController.getMaxChapterId();
+        const preferredChapterId = this.chapterController.normalizeChapterId(save.currentChapterId);
         const chapterIds: number[] = [];
 
-        for (let offset = 0; offset < maxUnlockedChapterId; offset += 1) {
-            const chapterId = ((preferredChapterId - 1 + offset) % maxUnlockedChapterId) + 1;
+        for (let offset = 0; offset < maxChapterId; offset += 1) {
+            const chapterId = ((preferredChapterId - 1 + offset) % maxChapterId) + 1;
 
             chapterIds.push(this.chapterController.normalizeChapterId(chapterId));
         }
