@@ -49,8 +49,10 @@ export class ChapterController {
         return config.levels.reduce((count, level) => count + (passedLevelIds.has(level.id) ? 1 : 0), 0);
     }
 
-    public isChapterUnlocked(chapterId: number, _save: SaveModel): boolean {
-        return chapterId >= 1 && chapterId <= this.getMaxChapterId();
+    public isChapterUnlocked(chapterId: number, save: SaveModel): boolean {
+        const maxUnlockedChapterId = Math.min(Math.max(save.unlockedChapterId, 1), this.getMaxChapterId());
+
+        return chapterId >= 1 && chapterId <= maxUnlockedChapterId;
     }
 
     public resolveCurrentPlayableLevelIndex(config: ChapterLevelConfig, save: SaveModel): number | null {

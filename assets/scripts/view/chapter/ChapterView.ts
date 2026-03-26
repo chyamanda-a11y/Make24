@@ -17,8 +17,11 @@ import {
     ChapterLevelDisplayModel,
 } from '../../controller/chapter/ChapterController';
 import { AudioUtil } from '../../core/AudioUtil';
+import { getCompactLevelMetaLabel } from '../../core/LevelMetaUtil';
 import { ChapterLevelConfig, LevelService } from '../../core/LevelService';
 import { SaveService } from '../../core/SaveService';
+import { SaveModel } from '../../model/common/SaveModel';
+import { LevelModel } from '../../model/game/LevelModel';
 import { LevelItemRenderData, LevelItemView } from './LevelItemView';
 
 const { ccclass, property } = _decorator;
@@ -309,10 +312,14 @@ export class ChapterView extends Component {
         }
 
         const clearedCount = this.controller.getProgressCount(config, save);
+        const currentPlayableLevelIndex = this.controller.resolveCurrentPlayableLevelIndex(config, save);
+        const currentPlayableLevel = currentPlayableLevelIndex === null
+            ? null
+            : config.levels[currentPlayableLevelIndex] ?? null;
 
         this.currentLevelDisplayModels = levelDisplayModels;
         this.preparedProgressValueText = `${clearedCount}/${config.levels.length}`;
-        this.preparedProgressSuffixText = 'Cleared';
+        this.preparedProgressSuffixText = this.buildProgressSuffixText(config, save, currentPlayableLevel, clearedCount);
         this.levelSelections.clear();
 
         levelDisplayModels.forEach((levelDisplayModel) => {
@@ -487,6 +494,25 @@ export class ChapterView extends Component {
 
     private formatRuntimeLevelItemNodeName(itemIndex: number): string {
         return `RuntimeLevelItem_${itemIndex.toString().padStart(2, '0')}`;
+    }
+
+    private buildProgressSuffixText(
+        config: ChapterLevelConfig,
+        save: SaveModel,
+        currentPlayableLevel: LevelModel | null,
+        clearedCount: number,
+    ): string {
+        if (!this.controller.isChapterUnlocked(config.chapterId, save)) {
+            return 'Cleared · Locked';
+        }
+
+        if (clearedCount >= config.levels.length) {
+            return 'Cleared · Complete';
+        }
+
+        const metaLabel = getCompactLevelMetaLabel(currentPlayableLevel);
+
+        return metaLabel ? `Cleared · ${metaLabel}` : 'Cleared';
     }
 
     private isDescendantOf(node: Node, parentNode: Node): boolean {

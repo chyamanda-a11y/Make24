@@ -2,6 +2,7 @@ import { _decorator, Button, Component, EventTouch, Label, Node, Prefab, Tween, 
 
 import { GameController } from '../../controller/game/GameController';
 import { AudioUtil } from '../../core/AudioUtil';
+import { getCompactLevelMetaLabel } from '../../core/LevelMetaUtil';
 import { LevelService } from '../../core/LevelService';
 import { LevelModel } from '../../model/game/LevelModel';
 import { AnswerPopupView } from './AnswerPopupView';
@@ -530,7 +531,9 @@ export class GameView extends Component {
     private renderHeader(level: LevelModel | null): void {
         const displayLevelNumber = level ? `${this.currentLevelIndex + 1}` : '';
         const chapterTitle = level ? this.getChapterTitle(level.chapterId) : '';
-        const headerText = level ? `Level ${displayLevelNumber}: ${chapterTitle}` : '';
+        const baseHeaderText = level ? `Level ${displayLevelNumber}: ${chapterTitle}` : '';
+        const metaLabel = getCompactLevelMetaLabel(level);
+        const headerText = metaLabel ? `${baseHeaderText} · ${metaLabel}` : baseHeaderText;
 
         if (this.headerStageLabel) {
             this.headerStageLabel.string = headerText;

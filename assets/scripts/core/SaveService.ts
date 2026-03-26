@@ -1,8 +1,17 @@
 import { sys } from 'cc';
 
-import { DEFAULT_SAVE_MODEL, SaveModel } from '../model/common/SaveModel';
+import { CURRENT_SAVE_VERSION, DEFAULT_SAVE_MODEL, SaveModel } from '../model/common/SaveModel';
 
 const STORAGE_KEY = 'make24.save';
+
+interface RawSaveModel {
+    readonly saveVersion?: unknown;
+    readonly currentChapterId?: unknown;
+    readonly currentLevelId?: unknown;
+    readonly unlockedChapterId?: unknown;
+    readonly passedLevelIds?: unknown;
+    readonly starsByLevelId?: unknown;
+}
 
 export class SaveService {
     public load(): SaveModel {
@@ -13,7 +22,13 @@ export class SaveService {
         }
 
         try {
-            return JSON.parse(rawValue) as SaveModel;
+            const normalizedSave = this.normalizeSave(JSON.parse(rawValue) as RawSaveModel);
+
+            if (!this.isCurrentSaveVersion(rawValue)) {
+                this.save(normalizedSave);
+            }
+
+            return normalizedSave;
         } catch {
             return DEFAULT_SAVE_MODEL;
         }
@@ -21,5 +36,75 @@ export class SaveService {
 
     public save(data: SaveModel): void {
         sys.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    private normalizeSave(rawSave: RawSaveModel): SaveModel {
+        if (!rawSave || typeof rawSave !== 'object') {
+            return DEFAULT_SAVE_MODEL;
+        }
+
+        const rawSaveVersion = this.readPositiveInteger(rawSave.saveVersion);
+
+        if (rawSaveVersion !== CURRENT_SAVE_VERSION) {
+            return DEFAULT_SAVE_MODEL;
+        }
+
+        return {
+            saveVersion: CURRENT_SAVE_VERSION,
+            currentChapterId: this.readPositiveInteger(rawSave.currentChapterId) ?? DEFAULT_SAVE_MODEL.currentChapterId,
+            currentLevelId: this.readPositiveInteger(rawSave.currentLevelId) ?? DEFAULT_SAVE_MODEL.currentLevelId,
+            unlockedChapterId: this.readPositiveInteger(rawSave.unlockedChapterId) ?? DEFAULT_SAVE_MODEL.unlockedChapterId,
+            passedLevelIds: this.normalizePassedLevelIds(rawSave.passedLevelIds),
+            starsByLevelId: this.normalizeStarsByLevelId(rawSave.starsByLevelId),
+        };
+    }
+
+    private normalizePassedLevelIds(rawPassedLevelIds: unknown): readonly number[] {
+        if (!Array.isArray(rawPassedLevelIds)) {
+            return DEFAULT_SAVE_MODEL.passedLevelIds;
+        }
+
+        return Array.from(
+            new Set(
+                rawPassedLevelIds
+                    .map((value) => this.readPositiveInteger(value))
+                    .filter((value): value is number => value !== null),
+            ),
+        );
+    }
+
+    private normalizeStarsByLevelId(rawStarsByLevelId: unknown): Readonly<Record<string, number>> {
+        if (!rawStarsByLevelId || typeof rawStarsByLevelId !== 'object' || Array.isArray(rawStarsByLevelId)) {
+            return DEFAULT_SAVE_MODEL.starsByLevelId;
+        }
+
+        return Object.entries(rawStarsByLevelId).reduce<Record<string, number>>((result, [levelId, starValue]) => {
+            const normalizedStarValue = this.readPositiveInteger(starValue);
+
+            if (normalizedStarValue === null) {
+                return result;
+            }
+
+            result[levelId] = normalizedStarValue;
+            return result;
+        }, {});
+    }
+
+    private isCurrentSaveVersion(rawValue: string): boolean {
+        try {
+            const rawSave = JSON.parse(rawValue) as RawSaveModel;
+
+            return this.readPositiveInteger(rawSave.saveVersion) === CURRENT_SAVE_VERSION;
+        } catch {
+            return false;
+        }
+    }
+
+    private readPositiveInteger(value: unknown): number | null {
+        if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+            return null;
+        }
+
+        return value;
     }
 }
