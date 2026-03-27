@@ -2,7 +2,6 @@ import { _decorator, BlockInputEvents, Button, Component, EventTouch, Label, Nod
 
 import { GameController } from '../../controller/game/GameController';
 import { AudioUtil } from '../../core/AudioUtil';
-import { getCompactLevelMetaLabel } from '../../core/LevelMetaUtil';
 import { LevelService } from '../../core/LevelService';
 import { LevelModel } from '../../model/game/LevelModel';
 import { AnswerPopupView } from './AnswerPopupView';
@@ -26,9 +25,9 @@ const CONTROL_BUTTON_PRESS_DURATION = 0.08;
 const CONTROL_BUTTON_RELEASE_DURATION = 0.1;
 const HEADER_STAGE_PATH = 'Header/Level 24: MasterNode';
 const CHAPTER_TITLE_BY_ID: Readonly<Record<number, string>> = {
-    1: 'Junior',
-    2: 'Middle',
-    3: 'Senior',
+    1: 'junior',
+    2: 'middle',
+    3: 'senior',
 };
 
 interface LevelRequest {
@@ -609,9 +608,7 @@ export class GameView extends Component {
     private renderHeader(level: LevelModel | null): void {
         const displayLevelNumber = level ? `${this.currentLevelIndex + 1}` : '';
         const chapterTitle = level ? this.getChapterTitle(level.chapterId) : '';
-        const baseHeaderText = level ? `Level ${displayLevelNumber}: ${chapterTitle}` : '';
-        const metaLabel = getCompactLevelMetaLabel(level);
-        const headerText = metaLabel ? `${baseHeaderText} · ${metaLabel}` : baseHeaderText;
+        const headerText = level ? `level ${displayLevelNumber}:${chapterTitle}` : '';
 
         if (this.headerStageLabel) {
             this.headerStageLabel.string = headerText;

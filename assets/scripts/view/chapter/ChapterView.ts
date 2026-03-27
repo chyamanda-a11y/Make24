@@ -17,7 +17,6 @@ import {
     ChapterLevelDisplayModel,
 } from '../../controller/chapter/ChapterController';
 import { AudioUtil } from '../../core/AudioUtil';
-import { getCompactLevelMetaLabel } from '../../core/LevelMetaUtil';
 import { ChapterLevelConfig, LevelService } from '../../core/LevelService';
 import { SaveService } from '../../core/SaveService';
 import { SaveModel } from '../../model/common/SaveModel';
@@ -319,7 +318,7 @@ export class ChapterView extends Component {
 
         this.currentLevelDisplayModels = levelDisplayModels;
         this.preparedProgressValueText = `${clearedCount}/${config.levels.length}`;
-        this.preparedProgressSuffixText = this.buildProgressSuffixText(config, save, currentPlayableLevel, clearedCount);
+        this.preparedProgressSuffixText = this.buildProgressSuffixText();
         this.levelSelections.clear();
 
         levelDisplayModels.forEach((levelDisplayModel) => {
@@ -496,23 +495,8 @@ export class ChapterView extends Component {
         return `RuntimeLevelItem_${itemIndex.toString().padStart(2, '0')}`;
     }
 
-    private buildProgressSuffixText(
-        config: ChapterLevelConfig,
-        save: SaveModel,
-        currentPlayableLevel: LevelModel | null,
-        clearedCount: number,
-    ): string {
-        if (!this.controller.isChapterUnlocked(config.chapterId, save)) {
-            return 'Cleared · Locked';
-        }
-
-        if (clearedCount >= config.levels.length) {
-            return 'Cleared · Complete';
-        }
-
-        const metaLabel = getCompactLevelMetaLabel(currentPlayableLevel);
-
-        return metaLabel ? `Cleared · ${metaLabel}` : 'Cleared';
+    private buildProgressSuffixText(): string {
+        return 'Cleared';
     }
 
     private isDescendantOf(node: Node, parentNode: Node): boolean {
