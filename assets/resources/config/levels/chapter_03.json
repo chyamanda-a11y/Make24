@@ -6,6 +6,75 @@
       "id": 301,
       "chapterId": 3,
       "numbers": [
+        2,
+        2,
+        8,
+        8
+      ],
+      "target": 24,
+      "answerExpression": "((8-2)*(8/2))",
+      "intendedSolution": "((8-2)*(8/2))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 6,
+      "allowDivision": true,
+      "hasFraction": false,
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "隐藏中间值",
+        "简单整除"
+      ],
+      "phaseId": "challenge-a"
+    },
+    {
+      "id": 302,
+      "chapterId": 3,
+      "numbers": [
+        1,
+        3,
+        7,
+        12
+      ],
+      "target": 24,
+      "answerExpression": "((12/3)*(7-1))",
+      "intendedSolution": "((12/3)*(7-1))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 6,
+      "allowDivision": true,
+      "hasFraction": false,
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "隐藏中间值",
+        "简单整除"
+      ],
+      "phaseId": "challenge-a"
+    },
+    {
+      "id": 303,
+      "chapterId": 3,
+      "numbers": [
+        2,
+        5,
+        8,
+        11
+      ],
+      "target": 24,
+      "answerExpression": "((11-5)*(8/2))",
+      "intendedSolution": "((11-5)*(8/2))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 6,
+      "allowDivision": true,
+      "hasFraction": false,
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "隐藏中间值",
+        "简单整除"
+      ],
+      "phaseId": "challenge-a"
+    },
+    {
+      "id": 304,
+      "chapterId": 3,
+      "numbers": [
         1,
         4,
         4,
@@ -26,7 +95,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 302,
+      "id": 305,
       "chapterId": 3,
       "numbers": [
         1,
@@ -49,7 +118,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 303,
+      "id": 306,
       "chapterId": 3,
       "numbers": [
         2,
@@ -72,7 +141,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 304,
+      "id": 307,
       "chapterId": 3,
       "numbers": [
         2,
@@ -95,7 +164,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 305,
+      "id": 308,
       "chapterId": 3,
       "numbers": [
         3,
@@ -118,7 +187,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 306,
+      "id": 309,
       "chapterId": 3,
       "numbers": [
         3,
@@ -141,7 +210,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 307,
+      "id": 310,
       "chapterId": 3,
       "numbers": [
         3,
@@ -164,7 +233,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 308,
+      "id": 311,
       "chapterId": 3,
       "numbers": [
         4,
@@ -187,7 +256,7 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 309,
+      "id": 312,
       "chapterId": 3,
       "numbers": [
         5,
@@ -210,76 +279,76 @@
       "phaseId": "challenge-a"
     },
     {
-      "id": 310,
+      "id": 313,
+      "chapterId": 3,
+      "numbers": [
+        3,
+        3,
+        5,
+        5
+      ],
+      "target": 24,
+      "answerExpression": "((5*5)-(3/3))",
+      "intendedSolution": "((5*5)-(3/3))",
+      "keyIdea": "顺序关键：先处理括号里的局部",
+      "difficulty": 8,
+      "allowDivision": true,
+      "hasFraction": false,
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "顺序意识",
+        "简单整除"
+      ],
+      "phaseId": "challenge-b"
+    },
+    {
+      "id": 314,
       "chapterId": 3,
       "numbers": [
         5,
-        6,
-        9,
-        9
+        5,
+        5,
+        5
       ],
       "target": 24,
-      "answerExpression": "(9+(5*(9-6)))",
-      "intendedSolution": "(9+(5*(9-6)))",
-      "keyIdea": "先找中间值，再合成24",
-      "difficulty": 6,
-      "allowDivision": false,
+      "answerExpression": "((5*5)-(5/5))",
+      "intendedSolution": "((5*5)-(5/5))",
+      "keyIdea": "顺序关键：先处理括号里的局部",
+      "difficulty": 8,
+      "allowDivision": true,
       "hasFraction": false,
       "estimatedSteps": 3,
       "teachingTags": [
-        "补差值",
-        "中间值训练"
+        "顺序意识",
+        "简单整除"
       ],
-      "phaseId": "challenge-a"
+      "phaseId": "challenge-b"
     },
     {
-      "id": 311,
+      "id": 315,
       "chapterId": 3,
       "numbers": [
-        6,
-        8,
-        8,
-        8
-      ],
-      "target": 24,
-      "answerExpression": "(8+(8*(8-6)))",
-      "intendedSolution": "(8+(8*(8-6)))",
-      "keyIdea": "先找8，再整合另一边",
-      "difficulty": 6,
-      "allowDivision": false,
-      "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "补差值",
-        "中间值训练"
-      ],
-      "phaseId": "challenge-a"
-    },
-    {
-      "id": 312,
-      "chapterId": 3,
-      "numbers": [
+        1,
         7,
-        8,
-        8,
-        9
+        12,
+        12
       ],
       "target": 24,
-      "answerExpression": "(8+(8*(9-7)))",
-      "intendedSolution": "(8+(8*(9-7)))",
-      "keyIdea": "先找8，再整合另一边",
-      "difficulty": 6,
-      "allowDivision": false,
+      "answerExpression": "((12*12)/(7-1))",
+      "intendedSolution": "((12*12)/(7-1))",
+      "keyIdea": "先做整除，再合成24",
+      "difficulty": 8,
+      "allowDivision": true,
       "hasFraction": false,
       "estimatedSteps": 3,
       "teachingTags": [
-        "补差值",
-        "中间值训练"
+        "简单整除",
+        "补差值"
       ],
-      "phaseId": "challenge-a"
+      "phaseId": "challenge-b"
     },
     {
-      "id": 313,
+      "id": 316,
       "chapterId": 3,
       "numbers": [
         1,
@@ -302,7 +371,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 314,
+      "id": 317,
       "chapterId": 3,
       "numbers": [
         1,
@@ -325,7 +394,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 315,
+      "id": 318,
       "chapterId": 3,
       "numbers": [
         1,
@@ -348,7 +417,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 316,
+      "id": 319,
       "chapterId": 3,
       "numbers": [
         3,
@@ -371,7 +440,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 317,
+      "id": 320,
       "chapterId": 3,
       "numbers": [
         1,
@@ -394,7 +463,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 318,
+      "id": 321,
       "chapterId": 3,
       "numbers": [
         2,
@@ -417,7 +486,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 319,
+      "id": 322,
       "chapterId": 3,
       "numbers": [
         3,
@@ -440,7 +509,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 320,
+      "id": 323,
       "chapterId": 3,
       "numbers": [
         4,
@@ -463,7 +532,7 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 321,
+      "id": 324,
       "chapterId": 3,
       "numbers": [
         2,
@@ -486,7 +555,76 @@
       "phaseId": "challenge-b"
     },
     {
-      "id": 322,
+      "id": 325,
+      "chapterId": 3,
+      "numbers": [
+        5,
+        5,
+        8,
+        8
+      ],
+      "target": 24,
+      "answerExpression": "((5*5)-(8/8))",
+      "intendedSolution": "((5*5)-(8/8))",
+      "keyIdea": "顺序关键：先处理括号里的局部",
+      "difficulty": 8,
+      "allowDivision": true,
+      "hasFraction": false,
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "顺序意识",
+        "简单整除"
+      ],
+      "phaseId": "challenge-c"
+    },
+    {
+      "id": 326,
+      "chapterId": 3,
+      "numbers": [
+        5,
+        5,
+        9,
+        9
+      ],
+      "target": 24,
+      "answerExpression": "((5*5)-(9/9))",
+      "intendedSolution": "((5*5)-(9/9))",
+      "keyIdea": "顺序关键：先处理括号里的局部",
+      "difficulty": 8,
+      "allowDivision": true,
+      "hasFraction": false,
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "顺序意识",
+        "简单整除"
+      ],
+      "phaseId": "challenge-c"
+    },
+    {
+      "id": 327,
+      "chapterId": 3,
+      "numbers": [
+        1,
+        4,
+        7,
+        7
+      ],
+      "target": 24,
+      "answerExpression": "((1+7)*(7-4))",
+      "intendedSolution": "((1+7)*(7-4))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 5,
+      "allowDivision": false,
+      "hasFraction": false,
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
+      "phaseId": "challenge-c"
+    },
+    {
+      "id": 328,
       "chapterId": 3,
       "numbers": [
         2,
@@ -506,10 +644,10 @@
         "分数驱动",
         "简单整除"
       ],
-      "phaseId": "challenge-b"
+      "phaseId": "challenge-c"
     },
     {
-      "id": 323,
+      "id": 329,
       "chapterId": 3,
       "numbers": [
         2,
@@ -529,79 +667,10 @@
         "分数驱动",
         "简单整除"
       ],
-      "phaseId": "challenge-b"
-    },
-    {
-      "id": 324,
-      "chapterId": 3,
-      "numbers": [
-        1,
-        8,
-        12,
-        12
-      ],
-      "target": 24,
-      "answerExpression": "(12/((12/8)-1))",
-      "intendedSolution": "(12/((12/8)-1))",
-      "keyIdea": "先凑12，再补齐24",
-      "difficulty": 9,
-      "allowDivision": true,
-      "hasFraction": true,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "分数驱动",
-        "简单整除"
-      ],
-      "phaseId": "challenge-b"
-    },
-    {
-      "id": 325,
-      "chapterId": 3,
-      "numbers": [
-        5,
-        5,
-        7,
-        11
-      ],
-      "target": 24,
-      "answerExpression": "(5*(7-(11/5)))",
-      "intendedSolution": "(5*(7-(11/5)))",
-      "keyIdea": "先找中间值，再合成24",
-      "difficulty": 9,
-      "allowDivision": true,
-      "hasFraction": true,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "分数驱动",
-        "简单整除"
-      ],
       "phaseId": "challenge-c"
     },
     {
-      "id": 326,
-      "chapterId": 3,
-      "numbers": [
-        5,
-        7,
-        7,
-        11
-      ],
-      "target": 24,
-      "answerExpression": "(7*(5-(11/7)))",
-      "intendedSolution": "(7*(5-(11/7)))",
-      "keyIdea": "先找中间值，再合成24",
-      "difficulty": 9,
-      "allowDivision": true,
-      "hasFraction": true,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "分数驱动",
-        "简单整除"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 327,
+      "id": 330,
       "chapterId": 3,
       "numbers": [
         2,
@@ -624,7 +693,7 @@
       "phaseId": "challenge-c"
     },
     {
-      "id": 328,
+      "id": 331,
       "chapterId": 3,
       "numbers": [
         2,
@@ -647,7 +716,76 @@
       "phaseId": "challenge-c"
     },
     {
-      "id": 329,
+      "id": 332,
+      "chapterId": 3,
+      "numbers": [
+        5,
+        5,
+        7,
+        11
+      ],
+      "target": 24,
+      "answerExpression": "(5*(7-(11/5)))",
+      "intendedSolution": "(5*(7-(11/5)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 9,
+      "allowDivision": true,
+      "hasFraction": true,
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "分数驱动",
+        "简单整除"
+      ],
+      "phaseId": "challenge-c"
+    },
+    {
+      "id": 333,
+      "chapterId": 3,
+      "numbers": [
+        5,
+        7,
+        7,
+        11
+      ],
+      "target": 24,
+      "answerExpression": "(7*(5-(11/7)))",
+      "intendedSolution": "(7*(5-(11/7)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 9,
+      "allowDivision": true,
+      "hasFraction": true,
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "分数驱动",
+        "简单整除"
+      ],
+      "phaseId": "challenge-c"
+    },
+    {
+      "id": 334,
+      "chapterId": 3,
+      "numbers": [
+        1,
+        8,
+        12,
+        12
+      ],
+      "target": 24,
+      "answerExpression": "(12/((12/8)-1))",
+      "intendedSolution": "(12/((12/8)-1))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 9,
+      "allowDivision": true,
+      "hasFraction": true,
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "分数驱动",
+        "简单整除"
+      ],
+      "phaseId": "challenge-c"
+    },
+    {
+      "id": 335,
       "chapterId": 3,
       "numbers": [
         2,
@@ -670,7 +808,7 @@
       "phaseId": "challenge-c"
     },
     {
-      "id": 330,
+      "id": 336,
       "chapterId": 3,
       "numbers": [
         2,
@@ -688,143 +826,6 @@
       "estimatedSteps": 3,
       "teachingTags": [
         "分数驱动",
-        "简单整除"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 331,
-      "chapterId": 3,
-      "numbers": [
-        2,
-        2,
-        2,
-        7
-      ],
-      "target": 24,
-      "answerExpression": "(2*((2*7)-2))",
-      "intendedSolution": "(2*((2*7)-2))",
-      "keyIdea": "顺序关键：先处理括号里的局部",
-      "difficulty": 7,
-      "allowDivision": false,
-      "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "顺序意识",
-        "中间值训练"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 332,
-      "chapterId": 3,
-      "numbers": [
-        2,
-        2,
-        3,
-        5
-      ],
-      "target": 24,
-      "answerExpression": "(3*((2*5)-2))",
-      "intendedSolution": "(3*((2*5)-2))",
-      "keyIdea": "顺序关键：先处理括号里的局部",
-      "difficulty": 7,
-      "allowDivision": false,
-      "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "顺序意识",
-        "中间值训练"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 333,
-      "chapterId": 3,
-      "numbers": [
-        1,
-        4,
-        5,
-        6
-      ],
-      "target": 24,
-      "answerExpression": "(4/(1-(5/6)))",
-      "intendedSolution": "(4/(1-(5/6)))",
-      "keyIdea": "先找中间值，再合成24",
-      "difficulty": 9,
-      "allowDivision": true,
-      "hasFraction": true,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "分数驱动",
-        "简单整除"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 334,
-      "chapterId": 3,
-      "numbers": [
-        1,
-        1,
-        5,
-        8
-      ],
-      "target": 24,
-      "answerExpression": "(8*((5-1)-1))",
-      "intendedSolution": "(8*((5-1)-1))",
-      "keyIdea": "顺序关键：先处理括号里的局部",
-      "difficulty": 7,
-      "allowDivision": false,
-      "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "顺序意识",
-        "中间值训练"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 335,
-      "chapterId": 3,
-      "numbers": [
-        2,
-        5,
-        8,
-        8
-      ],
-      "target": 24,
-      "answerExpression": "((5*8)-(2*8))",
-      "intendedSolution": "((5*8)-(2*8))",
-      "keyIdea": "顺序关键：先处理括号里的局部",
-      "difficulty": 7,
-      "allowDivision": false,
-      "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": [
-        "顺序意识",
-        "中间值训练"
-      ],
-      "phaseId": "challenge-c"
-    },
-    {
-      "id": 336,
-      "chapterId": 3,
-      "numbers": [
-        3,
-        5,
-        7,
-        13
-      ],
-      "target": 24,
-      "answerExpression": "((7+(5*13))/3)",
-      "intendedSolution": "((7+(5*13))/3)",
-      "keyIdea": "先除出3，再整合另一边",
-      "difficulty": 7,
-      "allowDivision": true,
-      "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": [
         "简单整除"
       ],
       "phaseId": "challenge-c"

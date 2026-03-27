@@ -369,6 +369,25 @@ function isSimplePairNode(node) {
         && node.right.type === 'num';
 }
 
+function inferSolutionScaffold(node) {
+    if (node.type === 'num') {
+        return 'num';
+    }
+
+    const leftIsSimplePair = isSimplePairNode(node.left);
+    const rightIsSimplePair = isSimplePairNode(node.right);
+
+    if (leftIsSimplePair && rightIsSimplePair) {
+        return 'pair-pair';
+    }
+
+    if (leftIsSimplePair || rightIsSimplePair) {
+        return 'pair-chain';
+    }
+
+    return 'deep-chain';
+}
+
 function hasNestedSubtractiveBranch(node) {
     if (node.type === 'num') {
         return false;
@@ -848,6 +867,7 @@ function decorateSolution(numbers, state) {
     solution.hasTrivialIdentityPattern = hasTrivialIdentityPattern(solution.node);
     solution.hasCounterIntuitiveDivision = hasCounterIntuitiveDivision(solution.node);
     solution.structureFamily = classifyStructureFamily(solution);
+    solution.solutionScaffold = inferSolutionScaffold(solution.node);
     solution.estimatedSteps = inferEstimatedSteps(solution);
     solution.dominantDifficulty = inferDifficulty(solution);
     solution.dominantKeyIdea = inferKeyIdea(solution);

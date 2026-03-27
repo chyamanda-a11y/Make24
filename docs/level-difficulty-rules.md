@@ -127,12 +127,18 @@
 
 ### Advanced
 
-- `advanced-a`: L2-L3，允许隐藏中间值、简单整除、简单补差值
+- `advanced-a`: L2-L3，允许隐藏中间值、简单整除、简单补差值，且不能被单一 `(a±b)*(c±d)` 骨架刷屏
 - `advanced-b`: L3-L4，必须包含一部分假锚点题
 - `advanced-c`: L3-L4，假锚点占比更高，并允许更深的结构误导
 
 当前硬约束：
 
+- `advanced-a` 至少 5 题为 `deep-chain` 骨架
+- `advanced-a` 至少 3 题为 `divide-then-combine`
+- `advanced-a` 至少 3 题为 `pair-pair` 骨架
+- `advanced-a` 最多 6 题为 `pair-pair` 骨架
+- `advanced-b` 至少 3 题为 `pair-pair` 骨架，且 `deep-chain` 不超过 9 题
+- `advanced-c` 至少 3 题为 `pair-pair` 骨架，且 `deep-chain` 不超过 9 题
 - `advanced-b` 至少 4 题为假锚点题
 - `advanced-c` 至少 6 题为假锚点题
 
@@ -146,6 +152,8 @@
 
 - `challenge-b` 每题 `allSolutionCount <= 4`
 - `challenge-c` 每题 `allSolutionCount <= 2`
+- `challenge-a/b/c` 每段至少 3 题为 `pair-pair` 骨架
+- `challenge-a/b/c` 每段 `deep-chain` 不超过 9 题
 
 ## 5. Dominant Solution 选择原则
 

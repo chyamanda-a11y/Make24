@@ -25,6 +25,34 @@ const STRUCTURED_CHAPTER_RULES = {
         },
         forbidFractions: true,
         forbidDivisionPhases: [],
+        phaseMinFamilyCounts: {
+            'advanced-a': {
+                'divide-then-combine': 3,
+            },
+        },
+        phaseMinScaffoldCounts: {
+            'advanced-a': {
+                'deep-chain': 5,
+                'pair-pair': 3,
+            },
+            'advanced-b': {
+                'pair-pair': 3,
+            },
+            'advanced-c': {
+                'pair-pair': 3,
+            },
+        },
+        phaseMaxScaffoldCounts: {
+            'advanced-a': {
+                'pair-pair': 6,
+            },
+            'advanced-b': {
+                'deep-chain': 9,
+            },
+            'advanced-c': {
+                'deep-chain': 9,
+            },
+        },
         phaseMinFakeAnchorTrapCounts: {
             'advanced-b': 4,
             'advanced-c': 6,
@@ -43,6 +71,28 @@ const STRUCTURED_CHAPTER_RULES = {
         phaseMinFractionCounts: {
             'challenge-b': 5,
             'challenge-c': 5,
+        },
+        phaseMinScaffoldCounts: {
+            'challenge-a': {
+                'pair-pair': 3,
+            },
+            'challenge-b': {
+                'pair-pair': 3,
+            },
+            'challenge-c': {
+                'pair-pair': 3,
+            },
+        },
+        phaseMaxScaffoldCounts: {
+            'challenge-a': {
+                'deep-chain': 9,
+            },
+            'challenge-b': {
+                'deep-chain': 9,
+            },
+            'challenge-c': {
+                'deep-chain': 9,
+            },
         },
         phaseMaxSolutionCounts: {
             'challenge-b': 4,
@@ -464,6 +514,60 @@ function validateStructuredChapter(config, errors) {
                     `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should contain at least ${expectedCount} fake-anchor levels, got ${fakeAnchorTrapCount}`,
                 );
             }
+        });
+    }
+
+    if (chapterRules.phaseMinFamilyCounts) {
+        Object.entries(chapterRules.phaseMinFamilyCounts).forEach(([phaseId, familyRules]) => {
+            Object.entries(familyRules).forEach(([structureFamily, expectedCount]) => {
+                const actualCount = analyzedLevels.filter(({ level, analysis }) =>
+                    level.phaseId === phaseId
+                    && analysis.dominantSolution
+                    && analysis.dominantSolution.structureFamily === structureFamily,
+                ).length;
+
+                if (actualCount < expectedCount) {
+                    errors.push(
+                        `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should contain at least ${expectedCount} ${structureFamily} levels, got ${actualCount}`,
+                    );
+                }
+            });
+        });
+    }
+
+    if (chapterRules.phaseMinScaffoldCounts) {
+        Object.entries(chapterRules.phaseMinScaffoldCounts).forEach(([phaseId, scaffoldRules]) => {
+            Object.entries(scaffoldRules).forEach(([solutionScaffold, expectedCount]) => {
+                const actualCount = analyzedLevels.filter(({ level, analysis }) =>
+                    level.phaseId === phaseId
+                    && analysis.dominantSolution
+                    && analysis.dominantSolution.solutionScaffold === solutionScaffold,
+                ).length;
+
+                if (actualCount < expectedCount) {
+                    errors.push(
+                        `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should contain at least ${expectedCount} ${solutionScaffold} levels, got ${actualCount}`,
+                    );
+                }
+            });
+        });
+    }
+
+    if (chapterRules.phaseMaxScaffoldCounts) {
+        Object.entries(chapterRules.phaseMaxScaffoldCounts).forEach(([phaseId, scaffoldRules]) => {
+            Object.entries(scaffoldRules).forEach(([solutionScaffold, maxCount]) => {
+                const actualCount = analyzedLevels.filter(({ level, analysis }) =>
+                    level.phaseId === phaseId
+                    && analysis.dominantSolution
+                    && analysis.dominantSolution.solutionScaffold === solutionScaffold,
+                ).length;
+
+                if (actualCount > maxCount) {
+                    errors.push(
+                        `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should contain at most ${maxCount} ${solutionScaffold} levels, got ${actualCount}`,
+                    );
+                }
+            });
         });
     }
 

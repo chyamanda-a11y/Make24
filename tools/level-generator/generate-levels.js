@@ -51,8 +51,28 @@ const CHAPTER_DEFINITIONS = [
                 count: 12,
                 targetDifficulty: 5,
                 targetSteps: 2,
-                preferFamilies: ['hidden-anchor', 'divide-then-combine', 'other'],
-                preferTags: ['补差值', '中间值训练'],
+                preferFamilies: ['divide-then-combine', 'make-1-then-scale', 'hidden-anchor', 'other'],
+                preferTags: ['补差值', '中间值训练', '简单整除', '先做1'],
+                quotas: [
+                    {
+                        count: 5,
+                        predicate: (candidate) => candidate.solutionScaffold === 'deep-chain',
+                    },
+                    {
+                        count: 3,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                    {
+                        count: 3,
+                        predicate: (candidate) => candidate.structureFamily === 'divide-then-combine',
+                    },
+                ],
+                caps: [
+                    {
+                        maxCount: 6,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                ],
             },
             {
                 phaseId: 'advanced-b',
@@ -63,8 +83,18 @@ const CHAPTER_DEFINITIONS = [
                 preferTags: ['顺序意识'],
                 quotas: [
                     {
+                        count: 3,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                    {
                         count: 4,
                         predicate: (candidate) => candidate.solution.isFakeAnchorTrap,
+                    },
+                ],
+                caps: [
+                    {
+                        maxCount: 9,
+                        predicate: (candidate) => candidate.solutionScaffold === 'deep-chain',
                     },
                 ],
             },
@@ -77,8 +107,18 @@ const CHAPTER_DEFINITIONS = [
                 preferTags: ['隐藏中间值', '顺序意识'],
                 quotas: [
                     {
+                        count: 3,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                    {
                         count: 6,
                         predicate: (candidate) => candidate.solution.isFakeAnchorTrap,
+                    },
+                ],
+                caps: [
+                    {
+                        maxCount: 9,
+                        predicate: (candidate) => candidate.solutionScaffold === 'deep-chain',
                     },
                 ],
             },
@@ -97,6 +137,18 @@ const CHAPTER_DEFINITIONS = [
                 preferFamilies: ['hidden-anchor', 'order-sensitive', 'other'],
                 preferTags: ['补差值', '中间值训练'],
                 forbidFractions: true,
+                quotas: [
+                    {
+                        count: 3,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                ],
+                caps: [
+                    {
+                        maxCount: 9,
+                        predicate: (candidate) => candidate.solutionScaffold === 'deep-chain',
+                    },
+                ],
             },
             {
                 phaseId: 'challenge-b',
@@ -107,12 +159,22 @@ const CHAPTER_DEFINITIONS = [
                 preferTags: ['顺序意识', '分数驱动'],
                 quotas: [
                     {
+                        count: 3,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                    {
                         count: 4,
                         predicate: (candidate) => candidate.hasFraction,
                     },
                     {
                         count: 4,
                         predicate: (candidate) => candidate.allSolutionCount <= 4,
+                    },
+                ],
+                caps: [
+                    {
+                        maxCount: 9,
+                        predicate: (candidate) => candidate.solutionScaffold === 'deep-chain',
                     },
                 ],
             },
@@ -125,12 +187,22 @@ const CHAPTER_DEFINITIONS = [
                 preferTags: ['顺序意识', '分数驱动'],
                 quotas: [
                     {
+                        count: 3,
+                        predicate: (candidate) => candidate.solutionScaffold === 'pair-pair',
+                    },
+                    {
                         count: 2,
                         predicate: (candidate) => candidate.hasFraction,
                     },
                     {
                         count: 4,
                         predicate: (candidate) => candidate.allSolutionCount <= 2,
+                    },
+                ],
+                caps: [
+                    {
+                        maxCount: 9,
+                        predicate: (candidate) => candidate.solutionScaffold === 'deep-chain',
                     },
                 ],
             },
@@ -259,6 +331,22 @@ function scoreCandidateForPhase(phaseId, candidate) {
         }
     }
 
+    if (phase.phaseId === 'advanced-a') {
+        if (candidate.solutionScaffold === 'deep-chain') {
+            score -= 5;
+        } else if (candidate.solutionScaffold === 'pair-pair') {
+            score += 7;
+        }
+
+        if (candidate.structureFamily === 'divide-then-combine') {
+            score -= 4;
+        }
+
+        if (candidate.structureFamily === 'make-1-then-scale') {
+            score -= 2;
+        }
+    }
+
     if (phase.phaseId === 'challenge-b') {
         score += candidate.allSolutionCount * 2;
 
@@ -306,6 +394,7 @@ function createCandidate(numbers, phaseId, analysis) {
         estimatedSteps: dominantSolution.estimatedSteps,
         teachingTags,
         structureFamily: dominantSolution.structureFamily,
+        solutionScaffold: dominantSolution.solutionScaffold,
         solution: dominantSolution,
         allSolutionCount: analysis.allSolutionCount,
         solutionCountBand: analysis.solutionCountBand,
@@ -419,13 +508,32 @@ function wouldRepeatKeyIdea(selection, candidate) {
     );
 }
 
-function pickCandidates(candidates, selection, usedKeys, count, predicate = () => true) {
+function countMatchingCandidates(selection, predicate) {
+    return selection.filter((candidate) => predicate(candidate)).length;
+}
+
+function wouldExceedPhaseCaps(phaseConfig, selection, candidate) {
+    if (!Array.isArray(phaseConfig.caps)) {
+        return false;
+    }
+
+    return phaseConfig.caps.some((cap) => (
+        cap.predicate(candidate)
+        && countMatchingCandidates(selection, cap.predicate) >= cap.maxCount
+    ));
+}
+
+function pickCandidates(candidates, selection, usedKeys, count, phaseConfig, predicate = () => true) {
     for (const candidate of candidates) {
         if (selection.length >= count) {
             return;
         }
 
-        if (usedKeys.has(candidate.key) || !predicate(candidate)) {
+        if (
+            usedKeys.has(candidate.key)
+            || !predicate(candidate)
+            || wouldExceedPhaseCaps(phaseConfig, selection, candidate)
+        ) {
             continue;
         }
 
@@ -442,7 +550,50 @@ function pickCandidates(candidates, selection, usedKeys, count, predicate = () =
             return;
         }
 
-        if (usedKeys.has(candidate.key) || !predicate(candidate)) {
+        if (
+            usedKeys.has(candidate.key)
+            || !predicate(candidate)
+            || wouldExceedPhaseCaps(phaseConfig, selection, candidate)
+        ) {
+            continue;
+        }
+
+        usedKeys.add(candidate.key);
+        selection.push(candidate);
+    }
+}
+
+function pickCandidatesForQuota(candidates, selection, usedKeys, quota, phaseConfig) {
+    const predicate = quota.predicate ?? (() => true);
+
+    for (const candidate of candidates) {
+        if (countMatchingCandidates(selection, predicate) >= quota.count) {
+            return;
+        }
+
+        if (
+            usedKeys.has(candidate.key)
+            || !predicate(candidate)
+            || wouldExceedPhaseCaps(phaseConfig, selection, candidate)
+            || wouldRepeatKeyIdea(selection, candidate)
+        ) {
+            continue;
+        }
+
+        usedKeys.add(candidate.key);
+        selection.push(candidate);
+    }
+
+    for (const candidate of candidates) {
+        if (countMatchingCandidates(selection, predicate) >= quota.count) {
+            return;
+        }
+
+        if (
+            usedKeys.has(candidate.key)
+            || !predicate(candidate)
+            || wouldExceedPhaseCaps(phaseConfig, selection, candidate)
+        ) {
             continue;
         }
 
@@ -491,11 +642,11 @@ function selectPhaseLevels(phaseConfig, phaseCandidates, phaseCandidateIndex, us
 
     if (Array.isArray(phaseConfig.quotas)) {
         for (const quota of phaseConfig.quotas) {
-            pickCandidates(phaseCandidates, selection, usedKeys, quota.count, quota.predicate);
+            pickCandidatesForQuota(phaseCandidates, selection, usedKeys, quota, phaseConfig);
         }
     }
 
-    pickCandidates(phaseCandidates, selection, usedKeys, phaseConfig.count);
+    pickCandidates(phaseCandidates, selection, usedKeys, phaseConfig.count, phaseConfig);
 
     if (selection.length !== phaseConfig.count) {
         throw new Error(
