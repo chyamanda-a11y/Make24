@@ -141,7 +141,7 @@
       "__id__": 2
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 4
@@ -233,7 +233,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "1367947f-7763-4f30-b49f-225745716066@f9941",
+      "__uuid__": "f833401d-4866-4225-8de4-da19ac0a6dbe@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -287,7 +287,7 @@
         "__id__": 26
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 36
@@ -640,8 +640,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 135.029296875,
-      "height": 42.84
+      "width": 135.01294924401682,
+      "height": 42.839999999999996
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -679,7 +679,7 @@
     "_string": "24-POINT",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 31.5,
+    "_actualFontSize": 36.234375,
     "_fontSize": 30,
     "_fontFamily": "Arial",
     "_lineHeight": 34,
@@ -1020,7 +1020,7 @@
         "__id__": 46
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 52
@@ -1122,8 +1122,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 249.25194149925593,
-      "height": 153.72000000000003
+      "width": 249.24866591203104,
+      "height": 153.72
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1161,7 +1161,7 @@
     "_string": "24点",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 123.9,
+    "_actualFontSize": 142.521875,
     "_fontSize": 118,
     "_fontFamily": "Arial",
     "_lineHeight": 122,
@@ -1281,7 +1281,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 183.99998256138392,
+      "width": 184,
       "height": 123.47999999999999
     },
     "_anchorPoint": {
@@ -1320,7 +1320,7 @@
     "_string": "口算",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 96.60000000000001,
+    "_actualFontSize": 100,
     "_fontSize": 92,
     "_fontFamily": "Arial",
     "_lineHeight": 98,
@@ -1586,8 +1586,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 134.10053071521577,
-      "height": 37.8
+      "width": 134.08721094760674,
+      "height": 37.800000000000004
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1625,7 +1625,7 @@
     "_string": "▶ 开始游戏",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 27.3,
+    "_actualFontSize": 31.403125,
     "_fontSize": 26,
     "_fontFamily": "Arial",
     "_lineHeight": 30,
@@ -1817,7 +1817,7 @@
       "__id__": 2
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 72

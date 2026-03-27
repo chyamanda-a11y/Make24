@@ -19,9 +19,9 @@ export interface ChapterLevelDisplayModel {
 }
 
 const CHAPTER_TABS: readonly ChapterTabDefinition[] = [
-    { chapterId: 1, title: 'Junior', iconPath: 'sprites/levelChoose/tab_icon_1' },
-    { chapterId: 2, title: 'Middle', iconPath: 'sprites/levelChoose/tab_icon_2' },
-    { chapterId: 3, title: 'Senior', iconPath: 'sprites/levelChoose/tab_icon_3' },
+    { chapterId: 1, title: '初级', iconPath: 'sprites/levelChoose/tab_icon_1' },
+    { chapterId: 2, title: '中级', iconPath: 'sprites/levelChoose/tab_icon_2' },
+    { chapterId: 3, title: '高级', iconPath: 'sprites/levelChoose/tab_icon_3' },
 ];
 
 export class ChapterController {

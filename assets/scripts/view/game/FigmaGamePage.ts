@@ -132,7 +132,7 @@ export class FigmaGamePage extends Component {
             throw new Error('FigmaGamePage.initialize: required labels are missing');
         }
 
-        this.targetLabel.string = 'TARGET';
+        this.targetLabel.string = '目标';
         this.targetValueLabel.string = `${GOAL_VALUE}`;
         this.initialized = true;
         this.render();
@@ -253,7 +253,7 @@ export class FigmaGamePage extends Component {
         const header = this.createNode('Header', this.node, new Vec3(0, 562, 0), 624, 72);
 
         this.createIconNode('HeaderLeadingIcon', header, new Vec3(-286, 0, 0), 45, 45);
-        this.createLabel(header, new Vec3(-208, 0, 0), 360, 44, 'Level 24: Master', 36, COLORS.textPrimary, 0);
+        this.createLabel(header, new Vec3(-208, 0, 0), 360, 44, '24点大师', 36, COLORS.textPrimary, 0);
         this.createLabel(header, new Vec3(204, 0, 0), 80, 48, '24', 48, COLORS.textPrimary, 1);
         this.createIconNode('HeaderTrailingIcon', header, new Vec3(286, 0, 0), 45, 45);
     }
@@ -264,7 +264,7 @@ export class FigmaGamePage extends Component {
             new Vec3(-258, 426, 0),
             180,
             28,
-            'TARGET',
+            '目标',
             20,
             COLORS.textSecondary,
             0,
@@ -299,7 +299,7 @@ export class FigmaGamePage extends Component {
             new Vec3(0, -20, 0),
             220,
             28,
-            '0 / 3 SOLVED',
+            '0 / 3 已完成',
             20,
             COLORS.green,
             1,
@@ -339,7 +339,7 @@ export class FigmaGamePage extends Component {
         this.drawRoundedRect(faceGraphics, 600, 96, 48, COLORS.reset);
 
         this.createIconNode('ResetIcon', buttonNode, new Vec3(-118, 0, 1), 32, 32);
-        this.createLabel(buttonNode, new Vec3(56, 0, 1), 320, 40, 'RESET PUZZLE', 36, new Color(58, 0, 4, 255), 1);
+        this.createLabel(buttonNode, new Vec3(56, 0, 1), 320, 40, '重新开始', 36, new Color(58, 0, 4, 255), 1);
 
         this.resetButton = this.attachButton(buttonNode, (): void => {
             if (!this.initialized || !this.resetButton?.button.interactable) {
@@ -618,7 +618,7 @@ export class FigmaGamePage extends Component {
             );
         });
 
-        this.progressLabel.string = `${solvedCount} / ${stepCount} SOLVED`;
+        this.progressLabel.string = `${solvedCount} / ${stepCount} 已完成`;
         this.undoButton.button.interactable = model.stepHistory.length > 0;
         this.resetButton.button.interactable = model.currentLevel !== null;
     }

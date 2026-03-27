@@ -25,9 +25,9 @@ const CONTROL_BUTTON_PRESS_DURATION = 0.08;
 const CONTROL_BUTTON_RELEASE_DURATION = 0.1;
 const HEADER_STAGE_PATH = 'Header/Level 24: MasterNode';
 const CHAPTER_TITLE_BY_ID: Readonly<Record<number, string>> = {
-    1: 'junior',
-    2: 'middle',
-    3: 'senior',
+    1: '初级',
+    2: '中级',
+    3: '高级',
 };
 
 interface LevelRequest {
@@ -608,7 +608,7 @@ export class GameView extends Component {
     private renderHeader(level: LevelModel | null): void {
         const displayLevelNumber = level ? `${this.currentLevelIndex + 1}` : '';
         const chapterTitle = level ? this.getChapterTitle(level.chapterId) : '';
-        const headerText = level ? `level ${displayLevelNumber}:${chapterTitle}` : '';
+        const headerText = level ? `第${displayLevelNumber}关：${chapterTitle}` : '';
 
         if (this.headerStageLabel) {
             this.headerStageLabel.string = headerText;

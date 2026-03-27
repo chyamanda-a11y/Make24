@@ -496,7 +496,7 @@ export class ChapterView extends Component {
     }
 
     private buildProgressSuffixText(): string {
-        return 'Cleared';
+        return '已通关';
     }
 
     private isDescendantOf(node: Node, parentNode: Node): boolean {

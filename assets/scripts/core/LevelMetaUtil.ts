@@ -1,15 +1,15 @@
 import { LevelModel } from '../model/game/LevelModel';
 
 const PHASE_LABEL_BY_ID: Readonly<Record<string, string>> = {
-    'novice-a': 'Basics',
-    'novice-b': 'Build 6/8/12',
-    'novice-c': 'Order Ready',
-    'advanced-a': 'Two-Step',
-    'advanced-b': 'Order Matters',
-    'advanced-c': 'Hidden Path',
-    'challenge-a': 'Structure',
-    'challenge-b': 'Fraction Twist',
-    'challenge-c': 'Final Test',
+    'novice-a': '基础入门',
+    'novice-b': '凑 6/8/12',
+    'novice-c': '顺序准备',
+    'advanced-a': '两步思考',
+    'advanced-b': '顺序关键',
+    'advanced-c': '隐藏路径',
+    'challenge-a': '结构挑战',
+    'challenge-b': '分数变化',
+    'challenge-c': '最终测试',
 };
 
 export function getLevelPhaseLabel(phaseId?: string): string | null {
@@ -25,7 +25,7 @@ export function getLevelDifficultyLabel(level: Pick<LevelModel, 'difficulty'> | 
         return null;
     }
 
-    return `D${level.difficulty}`;
+    return `难度${level.difficulty}`;
 }
 
 export function getCompactLevelMetaLabel(

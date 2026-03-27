@@ -589,7 +589,7 @@
     "_string": "01",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 67,
+    "_actualFontSize": 71,
     "_fontSize": 58,
     "_fontFamily": "Arial",
     "_lineHeight": 58,
@@ -669,7 +669,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -22,
+      "y": -24.429,
       "z": 0
     },
     "_lrot": {
