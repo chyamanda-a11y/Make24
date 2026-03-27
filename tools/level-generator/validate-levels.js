@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { GOAL_VALUE, analyzeLevel, createNumbersKey } = require('./level-analysis');
 
-const GOAL_VALUE = 24;
 const CONFIG_DIR = path.resolve(__dirname, '../../assets/resources/config/levels');
 const CONFIG_FILES = ['chapter_01.json', 'chapter_02.json', 'chapter_03.json'];
+const DOMINANT_VALIDATION_CHAPTER_IDS = new Set([1, 2, 3]);
 const STRUCTURED_CHAPTER_RULES = {
     1: {
         requiredLevelCount: 36,
@@ -238,6 +239,7 @@ function validateLevel(level, config, levelIndex, errors) {
     }
 
     validateStructuredMetadata(level, config.chapterId, levelIndex, errors);
+    validateDominantSolution(level, config.chapterId, levelIndex, errors);
 }
 
 function validateStructuredMetadata(level, chapterId, levelIndex, errors) {
@@ -407,9 +409,73 @@ function validateStructuredChapter(config, errors) {
     }
 }
 
+function validateDominantSolution(level, chapterId, levelIndex, errors) {
+    if (!DOMINANT_VALIDATION_CHAPTER_IDS.has(chapterId)) {
+        return;
+    }
+
+    const analysis = analyzeLevel(level);
+
+    if (analysis.rejectReasons.includes('NO_LEGAL_SOLUTION')) {
+        errors.push(`chapter_${String(chapterId).padStart(2, '0')} level[${levelIndex}] has no legal solution`);
+        return;
+    }
+
+    if (analysis.rejectReasons.includes('NON_DOMINANT_ANSWER_EXPRESSION')) {
+        errors.push(
+            `chapter_${String(chapterId).padStart(2, '0')} level[${levelIndex}] answerExpression is not dominantSolution: ${analysis.dominantSolution.answerExpression}`,
+        );
+    }
+
+    if (analysis.rejectReasons.includes('NON_DOMINANT_INTENDED_SOLUTION')) {
+        errors.push(
+            `chapter_${String(chapterId).padStart(2, '0')} level[${levelIndex}] intendedSolution is not dominantSolution: ${analysis.dominantSolution.answerExpression}`,
+        );
+    }
+
+    if (analysis.alternativeIssue) {
+        errors.push(
+            `chapter_${String(chapterId).padStart(2, '0')} level[${levelIndex}] has simpler alternative family ${analysis.runnerUpSolution?.structureFamily ?? 'unknown'} competing with dominantSolution`,
+        );
+    }
+
+    if (analysis.phaseMismatchReasons.length > 0) {
+        errors.push(
+            `chapter_${String(chapterId).padStart(2, '0')} level[${levelIndex}] dominantSolution ${analysis.dominantSolution.answerExpression} mismatches phase ${level.phaseId}: ${analysis.phaseMismatchReasons.join('; ')}`,
+        );
+    }
+}
+
 function loadConfig(fileName) {
     const fullPath = path.join(CONFIG_DIR, fileName);
     return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+}
+
+function validateGlobalNumbersUniqueness(configs, errors) {
+    const seenNumbersKeys = new Map();
+
+    configs.forEach((config) => {
+        config.levels.forEach((level, levelIndex) => {
+            if (!Array.isArray(level.numbers) || level.numbers.length !== 4) {
+                return;
+            }
+
+            const numbersKey = createNumbersKey(level.numbers);
+            const existingLevel = seenNumbersKeys.get(numbersKey);
+
+            if (existingLevel) {
+                errors.push(
+                    `duplicate numbersKey ${numbersKey} at chapter_${String(config.chapterId).padStart(2, '0')} level[${levelIndex}] also seen in chapter_${String(existingLevel.chapterId).padStart(2, '0')} level[${existingLevel.levelIndex}]`,
+                );
+                return;
+            }
+
+            seenNumbersKeys.set(numbersKey, {
+                chapterId: config.chapterId,
+                levelIndex,
+            });
+        });
+    });
 }
 
 function summarizeConfig(config) {
@@ -433,9 +499,12 @@ function summarizeConfig(config) {
 
 function run() {
     const errors = [];
+    const configs = CONFIG_FILES.map((fileName) => ({
+        fileName,
+        config: loadConfig(fileName),
+    }));
 
-    CONFIG_FILES.forEach((fileName) => {
-        const config = loadConfig(fileName);
+    configs.forEach(({ fileName, config }) => {
 
         if (!Number.isInteger(config.chapterId) || config.chapterId < 1) {
             errors.push(`${fileName} chapterId must be a positive integer`);
@@ -467,6 +536,8 @@ function run() {
 
         summarizeConfig(config);
     });
+
+    validateGlobalNumbersUniqueness(configs.map(({ config }) => config), errors);
 
     if (errors.length > 0) {
         console.error('Level validation failed:');

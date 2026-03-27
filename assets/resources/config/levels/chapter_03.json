@@ -4,831 +4,826 @@
   "levels": [
     {
       "id": 301,
+      "chapterId": 3,
       "numbers": [
         2,
         8,
         9,
         13
       ],
+      "target": 24,
       "answerExpression": "((13-9)*(8-2))",
       "intendedSolution": "((13-9)*(8-2))",
       "keyIdea": "双差成 4×6",
       "difficulty": 6,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "结构型",
         "双差"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 302,
+      "chapterId": 3,
       "numbers": [
         3,
         5,
         8,
         11
       ],
+      "target": 24,
       "answerExpression": "((11-3)*(8-5))",
       "intendedSolution": "((11-3)*(8-5))",
       "keyIdea": "一边做 8，一边做 3",
       "difficulty": 6,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "结构型",
         "双差"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 303,
+      "chapterId": 3,
       "numbers": [
         4,
         8,
         10,
         12
       ],
-      "answerExpression": "((12-8)*(10-4))",
-      "intendedSolution": "((12-8)*(10-4))",
-      "keyIdea": "双差成 4×6",
-      "difficulty": 6,
+      "target": 24,
+      "answerExpression": "((10-4)*(12-8))",
+      "intendedSolution": "((10-4)*(12-8))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "结构型",
-        "双差"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 304,
+      "chapterId": 3,
       "numbers": [
         2,
         6,
         7,
         13
       ],
+      "target": 24,
       "answerExpression": "((13-7)*(6-2))",
       "intendedSolution": "((13-7)*(6-2))",
       "keyIdea": "先拆 6 和 4，再整体相乘",
       "difficulty": 6,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "结构型",
         "局部构造"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 305,
+      "chapterId": 3,
       "numbers": [
         1,
         6,
         8,
         11
       ],
-      "answerExpression": "((11+1)*(8-6))",
-      "intendedSolution": "((11+1)*(8-6))",
-      "keyIdea": "先凑 12，再保留 2",
-      "difficulty": 6,
+      "target": 24,
+      "answerExpression": "((1+11)*(8-6))",
+      "intendedSolution": "((1+11)*(8-6))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "结构型",
-        "凑12"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 306,
+      "chapterId": 3,
       "numbers": [
         2,
         5,
         7,
         10
       ],
-      "answerExpression": "((10+2)*(7-5))",
-      "intendedSolution": "((10+2)*(7-5))",
-      "keyIdea": "先做 12，再找乘 2",
-      "difficulty": 6,
+      "target": 24,
+      "answerExpression": "((2+10)*(7-5))",
+      "intendedSolution": "((2+10)*(7-5))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "结构型",
-        "凑12"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 307,
+      "chapterId": 3,
       "numbers": [
-        3,
-        4,
-        5,
+        1,
+        1,
+        2,
         12
       ],
-      "answerExpression": "(12*(3-(5-4)))",
-      "intendedSolution": "(12*(3-(5-4)))",
-      "keyIdea": "先做 1，再把 3 变成 2",
+      "target": 24,
+      "answerExpression": "(12*((1+2)-1))",
+      "intendedSolution": "(12*((1+2)-1))",
+      "keyIdea": "顺序关键：先处理括号里的局部",
       "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "结构型",
-        "先做1"
+        "顺序意识",
+        "中间值训练"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 308,
+      "chapterId": 3,
       "numbers": [
         4,
         6,
         7,
         8
       ],
+      "target": 24,
       "answerExpression": "(8*(4-(7-6)))",
       "intendedSolution": "(8*(4-(7-6)))",
       "keyIdea": "先做 1，再保留 3",
       "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "结构型",
         "先做1"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 309,
+      "chapterId": 3,
       "numbers": [
         2,
         3,
         6,
         10
       ],
+      "target": 24,
       "answerExpression": "((10-2)*(6-3))",
       "intendedSolution": "((10-2)*(6-3))",
       "keyIdea": "双差成 8×3",
       "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "结构型",
         "双差"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 310,
+      "chapterId": 3,
       "numbers": [
         2,
         5,
         6,
         11
       ],
+      "target": 24,
       "answerExpression": "((11-5)*(6-2))",
       "intendedSolution": "((11-5)*(6-2))",
       "keyIdea": "双差成 6×4",
       "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "结构型",
         "双差"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 311,
+      "chapterId": 3,
       "numbers": [
         1,
         3,
         4,
         9
       ],
-      "answerExpression": "(((9*3)-4)+1)",
-      "intendedSolution": "(((9*3)-4)+1)",
-      "keyIdea": "先冲到 27，再回退 3",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "(9+(3*(1+4)))",
+      "intendedSolution": "(9+(3*(1+4)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "结构型",
-        "回退法"
+        "中间值训练"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 312,
+      "chapterId": 3,
       "numbers": [
         2,
         4,
         8,
         10
       ],
-      "answerExpression": "(((8*4)-10)+2)",
-      "intendedSolution": "(((8*4)-10)+2)",
-      "keyIdea": "先冲到 32，再回退 8",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "((2+4)+(8+10))",
+      "intendedSolution": "((2+4)+(8+10))",
+      "keyIdea": "先做18，再补差值",
+      "difficulty": 4,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "结构型",
-        "回退法"
+        "隐藏中间值",
+        "中间值训练"
       ],
-      "phaseId": "challenge-a",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-a"
     },
     {
       "id": 313,
+      "chapterId": 3,
       "numbers": [
         10,
         11,
         11,
         13
       ],
-      "answerExpression": "(13-(11*(10-11)))",
-      "intendedSolution": "(13-(11*(10-11)))",
-      "keyIdea": "先做 -1，把减法翻成加法",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "((11-10)*(11+13))",
+      "intendedSolution": "((11-10)*(11+13))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 314,
+      "chapterId": 3,
       "numbers": [
+        1,
         3,
         4,
-        9,
-        12
+        6
       ],
-      "answerExpression": "(9*(3-(4/12)))",
-      "intendedSolution": "(9*(3-(4/12)))",
-      "keyIdea": "先做 1/3，再从 3 回退",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "(6/(1-(3/4)))",
+      "intendedSolution": "(6/(1-(3/4)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 9,
       "allowDivision": true,
       "hasFraction": true,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "简单分数",
-        "反直觉"
+        "分数驱动",
+        "简单整除"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 315,
+      "chapterId": 3,
       "numbers": [
         11,
         12,
         13,
         13
       ],
-      "answerExpression": "(13-(11*(12-13)))",
-      "intendedSolution": "(13-(11*(12-13)))",
-      "keyIdea": "先做 -1，再把 11 变加分",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "((11+13)*(13-12))",
+      "intendedSolution": "((11+13)*(13-12))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 316,
+      "chapterId": 3,
       "numbers": [
         9,
         10,
         11,
         13
       ],
-      "answerExpression": "(13-(11*(9-10)))",
-      "intendedSolution": "(13-(11*(9-10)))",
-      "keyIdea": "先做 -1，再乘 11",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "((11*(13-10))-9)",
+      "intendedSolution": "((11*(13-10))-9)",
+      "keyIdea": "顺序关键：先处理括号里的局部",
+      "difficulty": 8,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "顺序意识"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 317,
+      "chapterId": 3,
       "numbers": [
         1,
         4,
-        8,
-        12
+        5,
+        6
       ],
-      "answerExpression": "(12/(1-(4/8)))",
-      "intendedSolution": "(12/(1-(4/8)))",
-      "keyIdea": "先做 1/2，再让整体翻倍",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "(4/(1-(5/6)))",
+      "intendedSolution": "(4/(1-(5/6)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 9,
       "allowDivision": true,
       "hasFraction": true,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "简单分数",
-        "倒数结构"
+        "分数驱动",
+        "简单整除"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 318,
+      "chapterId": 3,
       "numbers": [
         11,
         12,
         12,
         12
       ],
-      "answerExpression": "(12-(12*(11-12)))",
-      "intendedSolution": "(12-(12*(11-12)))",
-      "keyIdea": "先做 -1，再把 12 变 24",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "((12-11)*(12+12))",
+      "intendedSolution": "((12-11)*(12+12))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 319,
+      "chapterId": 3,
       "numbers": [
         10,
         11,
         12,
         12
       ],
-      "answerExpression": "(12-(12*(10-11)))",
-      "intendedSolution": "(12-(12*(10-11)))",
-      "keyIdea": "先做 -1，再把减法变加法",
-      "difficulty": 7,
+      "target": 24,
+      "answerExpression": "((11-10)*(12+12))",
+      "intendedSolution": "((11-10)*(12+12))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 320,
+      "chapterId": 3,
       "numbers": [
-        2,
-        8,
-        9,
-        12
+        1,
+        5,
+        5,
+        5
       ],
-      "answerExpression": "(9*(2+(8/12)))",
-      "intendedSolution": "(9*(2+(8/12)))",
-      "keyIdea": "先做 2/3，再补成 8/3",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "(5*(5-(1/5)))",
+      "intendedSolution": "(5*(5-(1/5)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 9,
       "allowDivision": true,
       "hasFraction": true,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "简单分数",
-        "补差值"
+        "分数驱动",
+        "简单整除"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 321,
+      "chapterId": 3,
       "numbers": [
         8,
         9,
         11,
         13
       ],
-      "answerExpression": "(13-(11*(8-9)))",
-      "intendedSolution": "(13-(11*(8-9)))",
-      "keyIdea": "先做 -1，把 11 反向放大",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "((11+13)*(9-8))",
+      "intendedSolution": "((11+13)*(9-8))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 322,
+      "chapterId": 3,
       "numbers": [
         7,
         8,
         11,
         13
       ],
-      "answerExpression": "(13-(11*(7-8)))",
-      "intendedSolution": "(13-(11*(7-8)))",
-      "keyIdea": "先做 -1，再从 13 往上走",
+      "target": 24,
+      "answerExpression": "((7*(13-8))-11)",
+      "intendedSolution": "((7*(13-8))-11)",
+      "keyIdea": "顺序关键：先处理括号里的局部",
       "difficulty": 8,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "顺序意识"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 323,
+      "chapterId": 3,
       "numbers": [
-        12,
-        13,
-        13,
-        13
+        1,
+        6,
+        6,
+        8
       ],
-      "answerExpression": "(12/(13/(13+13)))",
-      "intendedSolution": "(12/(13/(13+13)))",
-      "keyIdea": "先做 1/2，再整体翻倍",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "(6/(1-(6/8)))",
+      "intendedSolution": "(6/(1-(6/8)))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 9,
       "allowDivision": true,
       "hasFraction": true,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "简单分数",
-        "倒数结构"
+        "分数驱动",
+        "简单整除"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 324,
+      "chapterId": 3,
       "numbers": [
         11,
         11,
         12,
         13
       ],
-      "answerExpression": "(13-(11*(11-12)))",
-      "intendedSolution": "(13-(11*(11-12)))",
-      "keyIdea": "先做 -1，再把 13 扩到 24",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "((11+13)*(12-11))",
+      "intendedSolution": "((11+13)*(12-11))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "反直觉",
-        "负一翻转"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-b",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-b"
     },
     {
       "id": 325,
+      "chapterId": 3,
       "numbers": [
         1,
         9,
         11,
         13
       ],
-      "answerExpression": "((1-13)*(9-11))",
-      "intendedSolution": "((1-13)*(9-11))",
-      "keyIdea": "双负相乘，把路做反",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "((11-9)*(13-1))",
+      "intendedSolution": "((11-9)*(13-1))",
+      "keyIdea": "先做2，再放大到12",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "收尾题",
-        "双负结构"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 326,
+      "chapterId": 3,
       "numbers": [
         2,
         10,
         11,
         13
       ],
-      "answerExpression": "((2+10)*(13-11))",
-      "intendedSolution": "((2+10)*(13-11))",
-      "keyIdea": "先凑 12，再乘 2",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "((13-11)*(2+10))",
+      "intendedSolution": "((13-11)*(2+10))",
+      "keyIdea": "先凑12，再乘2",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "收尾题",
-        "凑12"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 327,
+      "chapterId": 3,
       "numbers": [
         3,
         9,
         12,
         13
       ],
+      "target": 24,
       "answerExpression": "(3*((9+12)-13))",
       "intendedSolution": "(3*((9+12)-13))",
       "keyIdea": "先做 21，再回退到 8",
       "difficulty": 8,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "收尾题",
         "回退法"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 328,
+      "chapterId": 3,
       "numbers": [
         4,
         9,
         11,
         11
       ],
+      "target": 24,
       "answerExpression": "((4*11)-(9+11))",
       "intendedSolution": "((4*11)-(9+11))",
       "keyIdea": "先做 44，再减 20",
       "difficulty": 8,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "收尾题",
         "结构型"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 329,
+      "chapterId": 3,
       "numbers": [
         5,
         9,
         10,
         11
       ],
+      "target": 24,
       "answerExpression": "((5*9)-(10+11))",
       "intendedSolution": "((5*9)-(10+11))",
       "keyIdea": "先做 45，再减 21",
       "difficulty": 8,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
         "收尾题",
         "结构型"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 330,
+      "chapterId": 3,
       "numbers": [
         6,
         9,
         10,
         12
       ],
-      "answerExpression": "((9*(10-6))-12)",
-      "intendedSolution": "((9*(10-6))-12)",
-      "keyIdea": "先做 36，再回退 12",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "(6+(9*(12-10)))",
+      "intendedSolution": "(6+(9*(12-10)))",
+      "keyIdea": "先做18，再补差值",
+      "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "收尾题",
-        "回退法"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 331,
+      "chapterId": 3,
       "numbers": [
         7,
         9,
         10,
         11
       ],
-      "answerExpression": "(10-(7*(9-11)))",
-      "intendedSolution": "(10-(7*(9-11)))",
-      "keyIdea": "先做 -2，再被 7 反向放大",
-      "difficulty": 8,
+      "target": 24,
+      "answerExpression": "(10+(7*(11-9)))",
+      "intendedSolution": "(10+(7*(11-9)))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 6,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "收尾题",
-        "负数结构"
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 332,
+      "chapterId": 3,
       "numbers": [
         4,
         10,
         12,
         13
       ],
-      "answerExpression": "((4-12)*(10-13))",
-      "intendedSolution": "((4-12)*(10-13))",
-      "keyIdea": "双负相乘的 Boss 题",
-      "difficulty": 9,
+      "target": 24,
+      "answerExpression": "((12-4)*(13-10))",
+      "intendedSolution": "((12-4)*(13-10))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "收尾题",
-        "双负结构"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 333,
+      "chapterId": 3,
       "numbers": [
         2,
         11,
         13,
         13
       ],
-      "answerExpression": "((2*13)+(11-13))",
-      "intendedSolution": "((2*13)+(11-13))",
-      "keyIdea": "先做 26，再退 2",
-      "difficulty": 9,
+      "target": 24,
+      "answerExpression": "((2*13)-(13-11))",
+      "intendedSolution": "((2*13)-(13-11))",
+      "keyIdea": "顺序关键：先处理括号里的局部",
+      "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "收尾题",
-        "回退法"
+        "顺序意识"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 334,
+      "chapterId": 3,
       "numbers": [
         6,
         9,
         11,
         13
       ],
-      "answerExpression": "(6-(9*(11-13)))",
-      "intendedSolution": "(6-(9*(11-13)))",
-      "keyIdea": "先做 -2，再被 9 反向放大",
-      "difficulty": 9,
+      "target": 24,
+      "answerExpression": "(6+(9*(13-11)))",
+      "intendedSolution": "(6+(9*(13-11)))",
+      "keyIdea": "先做18，再补差值",
+      "difficulty": 7,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "收尾题",
-        "负数结构"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 335,
+      "chapterId": 3,
       "numbers": [
         2,
         11,
         12,
         12
       ],
-      "answerExpression": "((2*12)*(12-11))",
-      "intendedSolution": "((2*12)*(12-11))",
-      "keyIdea": "先做 24，再乘 1",
-      "difficulty": 9,
+      "target": 24,
+      "answerExpression": "((12-11)*(2*12))",
+      "intendedSolution": "((12-11)*(2*12))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
+      "estimatedSteps": 2,
       "teachingTags": [
-        "收尾题",
-        "先做1"
+        "隐藏中间值",
+        "补差值"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     },
     {
       "id": 336,
+      "chapterId": 3,
       "numbers": [
-        9,
-        11,
-        12,
-        13
+        2,
+        3,
+        5,
+        12
       ],
-      "answerExpression": "(12/(11/(9+13)))",
-      "intendedSolution": "(12/(11/(9+13)))",
-      "keyIdea": "先做 22，再除回 11",
+      "target": 24,
+      "answerExpression": "(12/(3-(5/2)))",
+      "intendedSolution": "(12/(3-(5/2)))",
+      "keyIdea": "先凑12，再补齐24",
       "difficulty": 9,
       "allowDivision": true,
       "hasFraction": true,
+      "estimatedSteps": 3,
       "teachingTags": [
-        "收尾题",
-        "简单分数"
+        "分数驱动",
+        "简单整除"
       ],
-      "phaseId": "challenge-c",
-      "chapterId": 3,
-      "target": 24,
-      "estimatedSteps": 3
+      "phaseId": "challenge-c"
     }
   ]
 }

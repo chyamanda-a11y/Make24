@@ -6,6 +6,7 @@ const { ccclass } = _decorator;
 
 @ccclass('ResultPopupView')
 export class ResultPopupView extends Component {
+    public onVisibilityChanged: ((visible: boolean) => void) | null = null;
     private titleLabel: Label | null = null;
     private nextButton: Button | null = null;
     private nextButtonLabel: Label | null = null;
@@ -54,15 +55,24 @@ export class ResultPopupView extends Component {
 
         this.titleLabel.string = title;
         this.nextButtonLabel.string = nextButtonText;
-        this.node.active = true;
+        this.setVisible(true);
     }
 
     public hide(): void {
-        this.node.active = false;
+        this.setVisible(false);
     }
 
     public handleNextButton(): void {
         AudioUtil.PlayNormalBtn();
         this.onNextTap?.();
+    }
+
+    private setVisible(visible: boolean): void {
+        if (this.node.active === visible) {
+            return;
+        }
+
+        this.node.active = visible;
+        this.onVisibilityChanged?.(visible);
     }
 }

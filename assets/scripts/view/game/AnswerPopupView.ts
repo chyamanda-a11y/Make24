@@ -6,6 +6,8 @@ const { ccclass } = _decorator;
 
 @ccclass('AnswerPopupView')
 export class AnswerPopupView extends Component {
+    public onVisibilityChanged: ((visible: boolean) => void) | null = null;
+
     private answerLabel: Label | null = null;
     private closeButton: Button | null = null;
     private hasResolvedReferences: boolean = false;
@@ -45,16 +47,25 @@ export class AnswerPopupView extends Component {
         this.resolveReferencesIfNeeded();
 
         this.answerLabel.string = this.formatExpressionForDisplay(answerExpression);
-        this.node.active = true;
+        this.setVisible(true);
     }
 
     public hide(): void {
-        this.node.active = false;
+        this.setVisible(false);
     }
 
     private handleCloseTap(): void {
         AudioUtil.PlayNormalBtn();
         this.hide();
+    }
+
+    private setVisible(visible: boolean): void {
+        if (this.node.active === visible) {
+            return;
+        }
+
+        this.node.active = visible;
+        this.onVisibilityChanged?.(visible);
     }
 
     private formatExpressionForDisplay(answerExpression: string): string {

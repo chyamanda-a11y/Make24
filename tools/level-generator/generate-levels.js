@@ -1,230 +1,131 @@
 const fs = require('fs');
 const path = require('path');
+const {
+    GOAL_VALUE,
+    analyzeNumbers,
+    createNumbersKey,
+    getPhaseMatchReasons,
+} = require('./level-analysis');
 
-const GOAL_VALUE = 24;
 const OUTPUT_DIR = path.resolve(__dirname, '../../assets/resources/config/levels');
 const CHAPTER_DEFINITIONS = [
-    { chapterId: 1, chapterName: 'beginner', fileName: 'chapter_01.json', targetCount: 80 },
-    { chapterId: 2, chapterName: 'advanced', fileName: 'chapter_02.json', targetCount: 60 },
-    { chapterId: 3, chapterName: 'challenge', fileName: 'chapter_03.json', targetCount: 40 },
+    {
+        chapterId: 1,
+        chapterName: 'beginner',
+        fileName: 'chapter_01.json',
+        phases: [
+            {
+                phaseId: 'novice-a',
+                count: 12,
+                targetDifficulty: 3,
+                targetSteps: 2,
+                preferFamilies: ['make-8-then-times-3', 'make-6-then-times-4', 'other'],
+                preferTags: ['凑8', '凑6'],
+            },
+            {
+                phaseId: 'novice-b',
+                count: 12,
+                targetDifficulty: 4,
+                targetSteps: 2,
+                preferFamilies: ['hidden-anchor', 'other'],
+                preferTags: ['隐藏中间值', '中间值训练'],
+            },
+            {
+                phaseId: 'novice-c',
+                count: 12,
+                targetDifficulty: 5,
+                targetSteps: 3,
+                preferFamilies: ['hidden-anchor', 'divide-then-combine', 'other'],
+                preferTags: ['补差值', '简单整除'],
+                preferDivision: true,
+            },
+        ],
+    },
+    {
+        chapterId: 2,
+        chapterName: 'advanced',
+        fileName: 'chapter_02.json',
+        phases: [
+            {
+                phaseId: 'advanced-a',
+                count: 12,
+                targetDifficulty: 5,
+                targetSteps: 2,
+                preferFamilies: ['hidden-anchor', 'divide-then-combine', 'other'],
+                preferTags: ['补差值', '中间值训练'],
+            },
+            {
+                phaseId: 'advanced-b',
+                count: 12,
+                targetDifficulty: 7,
+                targetSteps: 3,
+                preferFamilies: ['order-sensitive', 'hidden-anchor'],
+                preferTags: ['顺序意识'],
+            },
+            {
+                phaseId: 'advanced-c',
+                count: 12,
+                targetDifficulty: 7,
+                targetSteps: 3,
+                preferFamilies: ['hidden-anchor', 'order-sensitive', 'divide-then-combine'],
+                preferTags: ['隐藏中间值', '顺序意识'],
+            },
+        ],
+    },
+    {
+        chapterId: 3,
+        chapterName: 'challenge',
+        fileName: 'chapter_03.json',
+        phases: [
+            {
+                phaseId: 'challenge-a',
+                count: 12,
+                targetDifficulty: 6,
+                targetSteps: 3,
+                preferFamilies: ['hidden-anchor', 'order-sensitive', 'other'],
+                preferTags: ['补差值', '中间值训练'],
+                forbidFractions: true,
+            },
+            {
+                phaseId: 'challenge-b',
+                count: 12,
+                targetDifficulty: 8,
+                targetSteps: 3,
+                preferFamilies: ['order-sensitive', 'fraction-driven', 'divide-then-combine'],
+                preferTags: ['顺序意识', '分数驱动'],
+                quotas: [
+                    {
+                        count: 4,
+                        predicate: (candidate) => candidate.hasFraction,
+                    },
+                ],
+            },
+            {
+                phaseId: 'challenge-c',
+                count: 12,
+                targetDifficulty: 8,
+                targetSteps: 3,
+                preferFamilies: ['order-sensitive', 'fraction-driven', 'hidden-anchor'],
+                preferTags: ['顺序意识', '分数驱动'],
+                quotas: [
+                    {
+                        count: 1,
+                        predicate: (candidate) => candidate.hasFraction,
+                    },
+                ],
+            },
+        ],
+    },
 ];
 
-function createLevelKey(numbers) {
-    return [...numbers].sort((left, right) => left - right).join('-');
-}
-
-function gcd(a, b) {
-    let x = Math.abs(a);
-    let y = Math.abs(b);
-
-    while (y !== 0) {
-        const next = x % y;
-        x = y;
-        y = next;
-    }
-
-    return x === 0 ? 1 : x;
-}
-
-function createRational(numerator, denominator = 1) {
-    if (denominator === 0) {
-        return null;
-    }
-
-    let nextNumerator = numerator;
-    let nextDenominator = denominator;
-
-    if (nextDenominator < 0) {
-        nextNumerator *= -1;
-        nextDenominator *= -1;
-    }
-
-    const divisor = gcd(nextNumerator, nextDenominator);
-
-    return {
-        numerator: nextNumerator / divisor,
-        denominator: nextDenominator / divisor,
-    };
-}
-
-function add(left, right) {
-    return createRational(
-        left.numerator * right.denominator + right.numerator * left.denominator,
-        left.denominator * right.denominator,
-    );
-}
-
-function subtract(left, right) {
-    return createRational(
-        left.numerator * right.denominator - right.numerator * left.denominator,
-        left.denominator * right.denominator,
-    );
-}
-
-function multiply(left, right) {
-    return createRational(
-        left.numerator * right.numerator,
-        left.denominator * right.denominator,
-    );
-}
-
-function divide(left, right) {
-    if (right.numerator === 0) {
-        return null;
-    }
-
-    return createRational(
-        left.numerator * right.denominator,
-        left.denominator * right.numerator,
-    );
-}
-
-function isInteger(value) {
-    return value.denominator === 1;
-}
-
-function isGoal(value) {
-    return value.numerator === GOAL_VALUE * value.denominator;
-}
-
-function absValue(value) {
-    return Math.abs(value.numerator / value.denominator);
-}
-
-function createLeafState(number) {
-    return {
-        value: createRational(number, 1),
-        expr: `${number}`,
-        meta: {
-            operations: [],
-            fractionCount: 0,
-            negativeCount: 0,
-            maxAbsIntermediate: Math.abs(number),
-            depth: 0,
-            imbalance: 0,
-        },
-    };
-}
-
-function createMergedState(left, right, operator, result) {
-    return {
-        value: result,
-        expr: `(${left.expr}${operator}${right.expr})`,
-        meta: {
-            operations: [...left.meta.operations, ...right.meta.operations, operator],
-            fractionCount:
-                left.meta.fractionCount +
-                right.meta.fractionCount +
-                (isInteger(result) ? 0 : 1),
-            negativeCount:
-                left.meta.negativeCount +
-                right.meta.negativeCount +
-                (result.numerator < 0 ? 1 : 0),
-            maxAbsIntermediate: Math.max(
-                left.meta.maxAbsIntermediate,
-                right.meta.maxAbsIntermediate,
-                absValue(result),
-            ),
-            depth: Math.max(left.meta.depth, right.meta.depth) + 1,
-            imbalance:
-                left.meta.imbalance +
-                right.meta.imbalance +
-                Math.abs(left.meta.depth - right.meta.depth),
-        },
-    };
-}
-
-function buildNextStates(left, right) {
-    const nextStates = [];
-
-    nextStates.push(createMergedState(left, right, '+', add(left.value, right.value)));
-    nextStates.push(createMergedState(left, right, '*', multiply(left.value, right.value)));
-    nextStates.push(createMergedState(left, right, '-', subtract(left.value, right.value)));
-    nextStates.push(createMergedState(right, left, '-', subtract(right.value, left.value)));
-
-    const leftDivideRight = divide(left.value, right.value);
-
-    if (leftDivideRight) {
-        nextStates.push(createMergedState(left, right, '/', leftDivideRight));
-    }
-
-    const rightDivideLeft = divide(right.value, left.value);
-
-    if (rightDivideLeft) {
-        nextStates.push(createMergedState(right, left, '/', rightDivideLeft));
-    }
-
-    return nextStates;
-}
-
-function decorateSolution(numbers, state) {
-    const operationSet = new Set(state.meta.operations);
-    const uniqueNumbers = new Set(numbers);
-
-    return {
-        answerExpression: state.expr,
-        numbers,
-        operations: state.meta.operations,
-        distinctOpCount: operationSet.size,
-        usesDivision: operationSet.has('/'),
-        usesSubtraction: operationSet.has('-'),
-        fractionCount: state.meta.fractionCount,
-        negativeCount: state.meta.negativeCount,
-        maxAbsIntermediate: state.meta.maxAbsIntermediate,
-        imbalance: state.meta.imbalance,
-        maxNumber: numbers[numbers.length - 1],
-        minNumber: numbers[0],
-        numberSum: numbers.reduce((sum, value) => sum + value, 0),
-        uniqueNumberCount: uniqueNumbers.size,
-    };
-}
-
-function solveAll(numbers) {
-    const solutions = [];
-    const seenExpressions = new Set();
-    const states = numbers.map((number) => createLeafState(number));
-
-    search(states, solutions, seenExpressions, numbers);
-    return solutions;
-}
-
-function search(states, solutions, seenExpressions, numbers) {
-    if (states.length === 1) {
-        if (!isGoal(states[0].value)) {
-            return;
-        }
-
-        if (seenExpressions.has(states[0].expr)) {
-            return;
-        }
-
-        seenExpressions.add(states[0].expr);
-        solutions.push(decorateSolution(numbers, states[0]));
-        return;
-    }
-
-    for (let i = 0; i < states.length; i += 1) {
-        for (let j = i + 1; j < states.length; j += 1) {
-            const restStates = [];
-
-            for (let index = 0; index < states.length; index += 1) {
-                if (index !== i && index !== j) {
-                    restStates.push(states[index]);
-                }
-            }
-
-            const left = states[i];
-            const right = states[j];
-            const nextStates = buildNextStates(left, right);
-
-            for (const nextState of nextStates) {
-                restStates.push(nextState);
-                search(restStates, solutions, seenExpressions, numbers);
-                restStates.pop();
-            }
-        }
-    }
-}
+const PHASE_DEFINITIONS = CHAPTER_DEFINITIONS.flatMap((chapter) =>
+    chapter.phases.map((phase) => ({
+        ...phase,
+        chapterId: chapter.chapterId,
+        chapterName: chapter.chapterName,
+        fileName: chapter.fileName,
+    })),
+);
 
 function generateSortedTuples(min, max, length, start = min, prefix = [], result = []) {
     if (prefix.length === length) {
@@ -241,235 +142,224 @@ function generateSortedTuples(min, max, length, start = min, prefix = [], result
     return result;
 }
 
-function getBaseDifficulty(solution) {
-    const spread = solution.maxNumber - solution.minNumber;
-
-    return (
-        solution.maxNumber * 2 +
-        solution.numberSum +
-        solution.distinctOpCount * 5 +
-        (solution.usesDivision ? 6 : 0) +
-        (solution.usesSubtraction ? 3 : 0) +
-        solution.fractionCount * 10 +
-        solution.negativeCount * 8 +
-        solution.imbalance * 2 +
-        (solution.maxAbsIntermediate > 24 ? 4 : 0) +
-        (solution.maxAbsIntermediate > 48 ? 4 : 0) +
-        spread
-    );
+function getPhaseDefinition(phaseId) {
+    return PHASE_DEFINITIONS.find((phase) => phase.phaseId === phaseId) ?? null;
 }
 
-function hasTrivialIdentityExpression(expression) {
-    return (
-        /\((\d+)\/\1\)/.test(expression) ||
-        /\((\d+)-\1\)/.test(expression) ||
-        expression.includes('(1*') ||
-        expression.includes('*1)') ||
-        expression.includes('/1)')
-    );
+function isExtraPhaseCompatible(phaseId, candidate) {
+    if (phaseId.startsWith('novice-') || phaseId.startsWith('advanced-')) {
+        return candidate.hasFraction === false;
+    }
+
+    if (phaseId === 'challenge-a') {
+        return candidate.hasFraction === false;
+    }
+
+    return true;
 }
 
-function beginnerCompatible(solution) {
-    return (
-        solution.maxNumber <= 9 &&
-        solution.fractionCount === 0 &&
-        solution.negativeCount === 0 &&
-        solution.maxAbsIntermediate <= 36 &&
-        solution.distinctOpCount <= 2 &&
-        solution.imbalance <= 1
-    );
+function scoreCandidateForPhase(phaseId, candidate) {
+    const phase = getPhaseDefinition(phaseId);
+
+    if (!phase) {
+        return Number.MAX_SAFE_INTEGER;
+    }
+
+    let score =
+        Math.abs(candidate.difficulty - phase.targetDifficulty) * 12 +
+        Math.abs(candidate.estimatedSteps - phase.targetSteps) * 5 +
+        candidate.answerExpression.length / 1000;
+
+    if (Array.isArray(phase.preferFamilies) && phase.preferFamilies.includes(candidate.structureFamily)) {
+        score -= 4;
+    }
+
+    if (Array.isArray(phase.preferTags)) {
+        score -= candidate.teachingTags.filter((tag) => phase.preferTags.includes(tag)).length * 2;
+    }
+
+    if (phase.preferDivision && !candidate.allowDivision) {
+        score += 6;
+    }
+
+    if (!phase.preferDivision && candidate.allowDivision) {
+        score += 2;
+    }
+
+    if (phase.forbidFractions && candidate.hasFraction) {
+        score += 20;
+    }
+
+    if (phase.phaseId === 'challenge-b' && candidate.hasFraction) {
+        score -= 6;
+    }
+
+    if (phase.phaseId === 'challenge-c' && candidate.hasFraction) {
+        score -= 3;
+    }
+
+    return score;
 }
 
-function beginnerScore(solution) {
-    return (
-        getBaseDifficulty(solution) +
-        (solution.usesDivision ? 5 : 0) +
-        (solution.usesSubtraction ? 2 : 0) +
-        solution.maxAbsIntermediate / 10
-    );
-}
+function createCandidate(numbers, phaseId, analysis) {
+    const dominantSolution = analysis.dominantSolution;
 
-function advancedCompatible(solution) {
-    return (
-        solution.maxNumber <= 10 &&
-        solution.fractionCount === 0 &&
-        solution.negativeCount === 0 &&
-        solution.maxAbsIntermediate <= 72 &&
-        solution.distinctOpCount >= 2 &&
-        (solution.usesDivision || solution.usesSubtraction || solution.imbalance >= 2) &&
-        !hasTrivialIdentityExpression(solution.answerExpression)
-    );
-}
-
-function advancedScore(solution) {
-    return Math.abs(getBaseDifficulty(solution) - 40) - (solution.usesDivision ? 4 : 0);
-}
-
-function challengeCompatible(solution) {
-    return (
-        solution.maxNumber <= 13 &&
-        solution.maxAbsIntermediate <= 144 &&
-        (solution.usesDivision ||
-            solution.usesSubtraction ||
-            solution.fractionCount > 0 ||
-            solution.imbalance >= 2) &&
-        !hasTrivialIdentityExpression(solution.answerExpression)
-    );
-}
-
-function challengeScore(solution) {
-    return (
-        getBaseDifficulty(solution) +
-        solution.fractionCount * 4 +
-        solution.negativeCount * 3
-    );
-}
-
-function pickBestSolution(solutions, predicate, scoreFn, mode) {
-    const compatibleSolutions = solutions.filter(predicate);
-
-    if (compatibleSolutions.length === 0) {
+    if (!dominantSolution) {
         return null;
     }
 
-    const sortedSolutions = [...compatibleSolutions].sort((left, right) => {
-        const scoreGap = scoreFn(left) - scoreFn(right);
+    const teachingTags = dominantSolution.dominantTags.length > 0
+        ? dominantSolution.dominantTags
+        : ['中间值训练'];
 
-        if (scoreGap !== 0) {
-            return scoreGap;
-        }
+    const candidate = {
+        key: createNumbersKey(numbers),
+        numbers,
+        phaseId,
+        answerExpression: dominantSolution.answerExpression,
+        intendedSolution: dominantSolution.answerExpression,
+        keyIdea: dominantSolution.dominantKeyIdea,
+        difficulty: dominantSolution.dominantDifficulty,
+        allowDivision: dominantSolution.usesDivision,
+        hasFraction: dominantSolution.fractionCount > 0,
+        estimatedSteps: dominantSolution.estimatedSteps,
+        teachingTags,
+        structureFamily: dominantSolution.structureFamily,
+        solution: dominantSolution,
+        allSolutionCount: analysis.allSolutionCount,
+    };
 
-        return left.answerExpression.localeCompare(right.answerExpression);
-    });
-
-    if (mode === 'max') {
-        return sortedSolutions[sortedSolutions.length - 1];
-    }
-
-    return sortedSolutions[0];
+    candidate.score = scoreCandidateForPhase(phaseId, candidate);
+    return candidate;
 }
 
 function analyzeCandidates() {
     const tuples = generateSortedTuples(1, 13, 4);
-    const beginnerCandidates = [];
-    const advancedCandidates = [];
-    const challengeCandidates = [];
+    const phaseCandidates = new Map(PHASE_DEFINITIONS.map((phase) => [phase.phaseId, []]));
 
     for (const numbers of tuples) {
-        const solutions = solveAll(numbers);
+        const analysis = analyzeNumbers(numbers);
 
-        if (solutions.length === 0) {
+        if (!analysis.dominantSolution) {
             continue;
         }
 
-        const beginnerSolution = pickBestSolution(
-            solutions,
-            beginnerCompatible,
-            beginnerScore,
-            'min',
-        );
+        for (const phase of PHASE_DEFINITIONS) {
+            const phaseMismatchReasons = getPhaseMatchReasons(phase.phaseId, analysis.dominantSolution);
 
-        if (beginnerSolution) {
-            beginnerCandidates.push({
-                key: numbers.join('-'),
-                numbers,
-                answerExpression: beginnerSolution.answerExpression,
-                difficulty: beginnerScore(beginnerSolution),
-                solution: beginnerSolution,
-            });
-        }
+            if (phaseMismatchReasons.length > 0) {
+                continue;
+            }
 
-        const advancedSolution = pickBestSolution(
-            solutions,
-            advancedCompatible,
-            advancedScore,
-            'min',
-        );
+            const candidate = createCandidate(numbers, phase.phaseId, analysis);
 
-        if (advancedSolution) {
-            advancedCandidates.push({
-                key: numbers.join('-'),
-                numbers,
-                answerExpression: advancedSolution.answerExpression,
-                difficulty: getBaseDifficulty(advancedSolution),
-                solution: advancedSolution,
-            });
-        }
+            if (!candidate || !isExtraPhaseCompatible(phase.phaseId, candidate)) {
+                continue;
+            }
 
-        const challengeSolution = pickBestSolution(
-            solutions,
-            challengeCompatible,
-            challengeScore,
-            'max',
-        );
-
-        if (challengeSolution) {
-            challengeCandidates.push({
-                key: numbers.join('-'),
-                numbers,
-                answerExpression: challengeSolution.answerExpression,
-                difficulty: challengeScore(challengeSolution),
-                solution: challengeSolution,
-            });
+            phaseCandidates.get(phase.phaseId).push(candidate);
         }
     }
 
-    return {
-        beginnerCandidates: beginnerCandidates.sort(sortByDifficultyAsc),
-        advancedCandidates: advancedCandidates.sort(sortByDifficultyAsc),
-        challengeCandidates: challengeCandidates.sort(sortByDifficultyDesc),
-    };
-}
+    for (const candidates of phaseCandidates.values()) {
+        candidates.sort((left, right) => {
+            const scoreGap = left.score - right.score;
 
-function sortByDifficultyAsc(left, right) {
-    const gap = left.difficulty - right.difficulty;
+            if (scoreGap !== 0) {
+                return scoreGap;
+            }
 
-    if (gap !== 0) {
-        return gap;
+            return left.key.localeCompare(right.key);
+        });
     }
 
-    return left.key.localeCompare(right.key);
+    return phaseCandidates;
 }
 
-function sortByDifficultyDesc(left, right) {
-    const gap = right.difficulty - left.difficulty;
+function buildPhaseCandidateIndex(phaseCandidates) {
+    const phaseIndex = new Map();
 
-    if (gap !== 0) {
-        return gap;
+    for (const [phaseId, candidates] of phaseCandidates.entries()) {
+        phaseIndex.set(
+            phaseId,
+            new Map(candidates.map((candidate) => [candidate.key, candidate])),
+        );
     }
 
-    return left.key.localeCompare(right.key);
-}
-
-function buildCandidateIndex(candidates) {
-    return new Map(candidates.map((candidate) => [candidate.key, candidate]));
+    return phaseIndex;
 }
 
 function loadChapterConfig(fileName) {
     const fullPath = path.join(OUTPUT_DIR, fileName);
-
     return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
 }
 
-function resolveExistingSelection(existingLevels, candidateIndex, chapterName) {
+function resolveExistingPhaseSelection(existingLevels, phaseCandidateIndex, chapterName, phaseId) {
     return existingLevels.map((level, index) => {
-        const key = createLevelKey(level.numbers);
-        const candidate = candidateIndex.get(key);
+        const key = createNumbersKey(level.numbers);
+        const candidate = phaseCandidateIndex.get(key);
 
         if (!candidate) {
             throw new Error(
-                `${chapterName} existing level ${index + 1} with key ${key} is missing from candidate pool`,
+                `${chapterName} ${phaseId} existing level ${index + 1} with key ${key} is missing from candidate pool`,
             );
         }
 
         return {
             ...candidate,
             answerExpression: level.answerExpression,
+            intendedSolution: level.intendedSolution ?? level.answerExpression,
+            keyIdea: level.keyIdea,
+            difficulty: level.difficulty,
+            allowDivision: level.allowDivision,
+            hasFraction: level.hasFraction,
+            estimatedSteps: level.estimatedSteps,
+            teachingTags: level.teachingTags,
         };
     });
 }
 
-function selectByQuota(candidates, selection, usedKeys, count, predicate) {
+function seedSelection(initialSelection, usedKeys, chapterName, phaseId) {
+    const selection = [];
+
+    for (const candidate of initialSelection) {
+        if (usedKeys.has(candidate.key)) {
+            throw new Error(`${chapterName} ${phaseId} has duplicate numbersKey ${candidate.key} in locked selection`);
+        }
+
+        usedKeys.add(candidate.key);
+        selection.push(candidate);
+    }
+
+    return selection;
+}
+
+function wouldRepeatKeyIdea(selection, candidate) {
+    return (
+        selection.length >= 2 &&
+        selection[selection.length - 1].keyIdea === candidate.keyIdea &&
+        selection[selection.length - 2].keyIdea === candidate.keyIdea
+    );
+}
+
+function pickCandidates(candidates, selection, usedKeys, count, predicate = () => true) {
+    for (const candidate of candidates) {
+        if (selection.length >= count) {
+            return;
+        }
+
+        if (usedKeys.has(candidate.key) || !predicate(candidate)) {
+            continue;
+        }
+
+        if (wouldRepeatKeyIdea(selection, candidate)) {
+            continue;
+        }
+
+        usedKeys.add(candidate.key);
+        selection.push(candidate);
+    }
+
     for (const candidate of candidates) {
         if (selection.length >= count) {
             return;
@@ -484,77 +374,55 @@ function selectByQuota(candidates, selection, usedKeys, count, predicate) {
     }
 }
 
-function fillSelection(candidates, selection, usedKeys, count) {
-    for (const candidate of candidates) {
-        if (selection.length >= count) {
-            return;
-        }
-
-        if (usedKeys.has(candidate.key)) {
-            continue;
-        }
-
-        usedKeys.add(candidate.key);
-        selection.push(candidate);
-    }
-}
-
-function selectBeginnerLevels(beginnerCandidates, usedKeys, targetCount, initialSelection = []) {
-    const selection = [...initialSelection];
-    const noDivisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.3)));
-    const subtractionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.5)));
-    const divisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.7)));
-
-    selectByQuota(beginnerCandidates, selection, usedKeys, noDivisionQuota, (candidate) => !candidate.solution.usesDivision);
-    selectByQuota(beginnerCandidates, selection, usedKeys, subtractionQuota, (candidate) => candidate.solution.usesSubtraction);
-    selectByQuota(beginnerCandidates, selection, usedKeys, divisionQuota, (candidate) => candidate.solution.usesDivision);
-    fillSelection(beginnerCandidates, selection, usedKeys, targetCount);
-
-    return selection.slice(0, targetCount);
-}
-
-function selectAdvancedLevels(advancedCandidates, usedKeys, targetCount, initialSelection = []) {
-    const selection = [...initialSelection];
-    const midRangeCandidates = advancedCandidates.filter(
-        (candidate, index) =>
-            index >= Math.floor(advancedCandidates.length * 0.12) &&
-            index <= Math.floor(advancedCandidates.length * 0.6),
-    );
-    const divisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.4)));
-    const imbalanceQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.7)));
-
-    selectByQuota(midRangeCandidates, selection, usedKeys, divisionQuota, (candidate) => candidate.solution.usesDivision);
-    selectByQuota(midRangeCandidates, selection, usedKeys, imbalanceQuota, (candidate) => candidate.solution.imbalance >= 2);
-    fillSelection(midRangeCandidates, selection, usedKeys, targetCount);
-    fillSelection(advancedCandidates, selection, usedKeys, targetCount);
-
-    return selection.slice(0, targetCount);
-}
-
-function selectChallengeLevels(challengeCandidates, usedKeys, targetCount, initialSelection = []) {
-    const selection = [...initialSelection];
-    const fractionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.3)));
-    const negativeQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.5)));
-    const divisionQuota = Math.min(targetCount, Math.max(selection.length, Math.round(targetCount * 0.8)));
-
-    selectByQuota(challengeCandidates, selection, usedKeys, fractionQuota, (candidate) => candidate.solution.fractionCount > 0);
-    selectByQuota(challengeCandidates, selection, usedKeys, negativeQuota, (candidate) => candidate.solution.negativeCount > 0);
-    selectByQuota(challengeCandidates, selection, usedKeys, divisionQuota, (candidate) => candidate.solution.usesDivision);
-    fillSelection(challengeCandidates, selection, usedKeys, targetCount);
-
-    return selection.slice(0, targetCount);
-}
-
-function buildChapterConfig(chapterId, chapterName, levels) {
-    return {
-        chapterId,
+function selectPhaseLevels(phaseConfig, phaseCandidates, phaseCandidateIndex, usedKeys, existingLevels, chapterName) {
+    const initialSelection = resolveExistingPhaseSelection(
+        existingLevels,
+        phaseCandidateIndex,
         chapterName,
-        levels: levels.map((candidate, index) => ({
-            id: chapterId * 100 + index + 1,
-            chapterId,
-            numbers: candidate.numbers,
-            answerExpression: candidate.answerExpression,
-        })),
+        phaseConfig.phaseId,
+    );
+    const selection = seedSelection(initialSelection, usedKeys, chapterName, phaseConfig.phaseId);
+
+    if (Array.isArray(phaseConfig.quotas)) {
+        for (const quota of phaseConfig.quotas) {
+            pickCandidates(phaseCandidates, selection, usedKeys, quota.count, quota.predicate);
+        }
+    }
+
+    pickCandidates(phaseCandidates, selection, usedKeys, phaseConfig.count);
+
+    if (selection.length !== phaseConfig.count) {
+        throw new Error(
+            `${chapterName} ${phaseConfig.phaseId} expected ${phaseConfig.count} levels, got ${selection.length}`,
+        );
+    }
+
+    return selection;
+}
+
+function buildLevelRecord(chapterId, index, candidate) {
+    return {
+        id: chapterId * 100 + index + 1,
+        chapterId,
+        numbers: candidate.numbers,
+        target: GOAL_VALUE,
+        answerExpression: candidate.answerExpression,
+        intendedSolution: candidate.intendedSolution,
+        keyIdea: candidate.keyIdea,
+        difficulty: candidate.difficulty,
+        allowDivision: candidate.allowDivision,
+        hasFraction: candidate.hasFraction,
+        estimatedSteps: candidate.estimatedSteps,
+        teachingTags: candidate.teachingTags,
+        phaseId: candidate.phaseId,
+    };
+}
+
+function buildChapterConfig(chapterDefinition, levels) {
+    return {
+        chapterId: chapterDefinition.chapterId,
+        chapterName: chapterDefinition.chapterName,
+        levels: levels.map((candidate, index) => buildLevelRecord(chapterDefinition.chapterId, index, candidate)),
     };
 }
 
@@ -563,79 +431,51 @@ function writeJson(fileName, payload) {
     fs.writeFileSync(fullPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 }
 
-function summarize(name, levels) {
-    const divisionCount = levels.filter((candidate) => candidate.solution.usesDivision).length;
-    const subtractionCount = levels.filter((candidate) => candidate.solution.usesSubtraction).length;
-    const fractionCount = levels.filter((candidate) => candidate.solution.fractionCount > 0).length;
-    const negativeCount = levels.filter((candidate) => candidate.solution.negativeCount > 0).length;
+function summarizeChapter(chapterDefinition, levels) {
+    const divisionCount = levels.filter((level) => level.allowDivision).length;
+    const fractionCount = levels.filter((level) => level.hasFraction).length;
+    const phaseSummary = levels.reduce((result, level) => {
+        result[level.phaseId] = (result[level.phaseId] ?? 0) + 1;
+        return result;
+    }, {});
 
-    console.log(`${name}: ${levels.length} levels`);
-    console.log(
-        `  division=${divisionCount}, subtraction=${subtractionCount}, fraction=${fractionCount}, negative=${negativeCount}`,
-    );
-    console.log(
-        `  sample=${levels
-            .slice(0, 3)
-            .map((candidate) => `[${candidate.numbers.join(', ')}] ${candidate.answerExpression}`)
-            .join(' | ')}`,
-    );
-}
-
-function assertLevelCount(name, levels, expectedCount) {
-    if (levels.length !== expectedCount) {
-        throw new Error(`${name} expected ${expectedCount} levels, got ${levels.length}`);
-    }
+    console.log(`${chapterDefinition.fileName}: ${levels.length} levels`);
+    console.log(`  division=${divisionCount}, fraction=${fractionCount}`);
+    console.log(`  phases=${JSON.stringify(phaseSummary)}`);
 }
 
 function run() {
-    const { beginnerCandidates, advancedCandidates, challengeCandidates } = analyzeCandidates();
-    const beginnerCandidateIndex = buildCandidateIndex(beginnerCandidates);
-    const advancedCandidateIndex = buildCandidateIndex(advancedCandidates);
-    const challengeCandidateIndex = buildCandidateIndex(challengeCandidates);
-    const existingConfigs = CHAPTER_DEFINITIONS.map((definition) => loadChapterConfig(definition.fileName));
-    const usedKeys = new Set(
-        existingConfigs.flatMap((config) => config.levels.map((level) => createLevelKey(level.numbers))),
+    const phaseCandidates = analyzeCandidates();
+    const phaseCandidateIndex = buildPhaseCandidateIndex(phaseCandidates);
+    const existingConfigs = new Map(
+        CHAPTER_DEFINITIONS.map((definition) => [definition.chapterId, loadChapterConfig(definition.fileName)]),
     );
+    const usedKeys = new Set();
 
-    const beginnerLevels = selectBeginnerLevels(
-        beginnerCandidates,
-        usedKeys,
-        CHAPTER_DEFINITIONS[0].targetCount,
-        resolveExistingSelection(existingConfigs[0].levels, beginnerCandidateIndex, 'beginner'),
-    );
-    const advancedLevels = selectAdvancedLevels(
-        advancedCandidates,
-        usedKeys,
-        CHAPTER_DEFINITIONS[1].targetCount,
-        resolveExistingSelection(existingConfigs[1].levels, advancedCandidateIndex, 'advanced'),
-    );
-    const challengeLevels = selectChallengeLevels(
-        challengeCandidates,
-        usedKeys,
-        CHAPTER_DEFINITIONS[2].targetCount,
-        resolveExistingSelection(existingConfigs[2].levels, challengeCandidateIndex, 'challenge'),
-    );
+    for (const chapterDefinition of CHAPTER_DEFINITIONS) {
+        const existingConfig = existingConfigs.get(chapterDefinition.chapterId);
+        const selectedLevels = [];
 
-    assertLevelCount('beginner', beginnerLevels, CHAPTER_DEFINITIONS[0].targetCount);
-    assertLevelCount('advanced', advancedLevels, CHAPTER_DEFINITIONS[1].targetCount);
-    assertLevelCount('challenge', challengeLevels, CHAPTER_DEFINITIONS[2].targetCount);
+        for (const phaseConfig of chapterDefinition.phases) {
+            const phaseCandidatesForSelection = phaseCandidates.get(phaseConfig.phaseId) ?? [];
+            const phaseCandidateMap = phaseCandidateIndex.get(phaseConfig.phaseId) ?? new Map();
+            const existingPhaseLevels = existingConfig.levels.filter((level) => level.phaseId === phaseConfig.phaseId);
+            const phaseLevels = selectPhaseLevels(
+                phaseConfig,
+                phaseCandidatesForSelection,
+                phaseCandidateMap,
+                usedKeys,
+                existingPhaseLevels,
+                chapterDefinition.chapterName,
+            );
 
-    writeJson(
-        CHAPTER_DEFINITIONS[0].fileName,
-        buildChapterConfig(CHAPTER_DEFINITIONS[0].chapterId, CHAPTER_DEFINITIONS[0].chapterName, beginnerLevels),
-    );
-    writeJson(
-        CHAPTER_DEFINITIONS[1].fileName,
-        buildChapterConfig(CHAPTER_DEFINITIONS[1].chapterId, CHAPTER_DEFINITIONS[1].chapterName, advancedLevels),
-    );
-    writeJson(
-        CHAPTER_DEFINITIONS[2].fileName,
-        buildChapterConfig(CHAPTER_DEFINITIONS[2].chapterId, CHAPTER_DEFINITIONS[2].chapterName, challengeLevels),
-    );
+            selectedLevels.push(...phaseLevels);
+        }
 
-    summarize('chapter_01', beginnerLevels);
-    summarize('chapter_02', advancedLevels);
-    summarize('chapter_03', challengeLevels);
+        const nextConfig = buildChapterConfig(chapterDefinition, selectedLevels);
+        writeJson(chapterDefinition.fileName, nextConfig);
+        summarizeChapter(chapterDefinition, nextConfig.levels);
+    }
 }
 
 run();

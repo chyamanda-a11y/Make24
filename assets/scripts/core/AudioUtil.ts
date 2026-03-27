@@ -5,7 +5,7 @@ const AUDIO_ROOT_NODE_NAME = 'AudioUtilRoot';
 const AUDIO_RESOURCE_PATHS = {
     Match24: 'audio/match_24',
     NormalBtn: 'audio/normal_btn',
-    Success: 'audio/success',
+    Success: 'audio/success_3',
 } as const;
 
 type AudioKey = keyof typeof AUDIO_RESOURCE_PATHS;

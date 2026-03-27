@@ -5,22 +5,35 @@
     {
       "id": 101,
       "chapterId": 1,
-      "numbers": [1, 2, 3, 4],
+      "numbers": [
+        1,
+        2,
+        3,
+        4
+      ],
       "target": 24,
-      "answerExpression": "((1*2)*(3*4))",
-      "intendedSolution": "((1*2)*(3*4))",
-      "keyIdea": "先看12×2",
-      "difficulty": 1,
+      "answerExpression": "((1+3)*(2+4))",
+      "intendedSolution": "((1+3)*(2+4))",
+      "keyIdea": "先凑6，再乘4",
+      "difficulty": 3,
       "allowDivision": false,
       "hasFraction": false,
-      "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑12"],
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "凑6",
+        "中间值训练"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 102,
       "chapterId": 1,
-      "numbers": [1, 1, 3, 4],
+      "numbers": [
+        1,
+        1,
+        3,
+        4
+      ],
       "target": 24,
       "answerExpression": "((1+1)*(3*4))",
       "intendedSolution": "((1+1)*(3*4))",
@@ -29,13 +42,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑2"],
+      "teachingTags": [
+        "直观乘法",
+        "凑2"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 103,
       "chapterId": 1,
-      "numbers": [2, 2, 3, 3],
+      "numbers": [
+        2,
+        2,
+        3,
+        3
+      ],
       "target": 24,
       "answerExpression": "((2*2)*(3+3))",
       "intendedSolution": "((2*2)*(3+3))",
@@ -44,13 +65,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑4"],
+      "teachingTags": [
+        "直观乘法",
+        "凑4"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 104,
       "chapterId": 1,
-      "numbers": [1, 3, 3, 3],
+      "numbers": [
+        1,
+        3,
+        3,
+        3
+      ],
       "target": 24,
       "answerExpression": "((1+3)*(3+3))",
       "intendedSolution": "((1+3)*(3+3))",
@@ -59,13 +88,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑6"],
+      "teachingTags": [
+        "直观乘法",
+        "凑6"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 105,
       "chapterId": 1,
-      "numbers": [1, 2, 2, 4],
+      "numbers": [
+        1,
+        2,
+        2,
+        4
+      ],
       "target": 24,
       "answerExpression": "((1+2)*(2*4))",
       "intendedSolution": "((1+2)*(2*4))",
@@ -74,13 +111,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑8"],
+      "teachingTags": [
+        "直观乘法",
+        "凑8"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 106,
       "chapterId": 1,
-      "numbers": [1, 2, 2, 5],
+      "numbers": [
+        1,
+        2,
+        2,
+        5
+      ],
       "target": 24,
       "answerExpression": "((1+5)*(2*2))",
       "intendedSolution": "((1+5)*(2*2))",
@@ -89,43 +134,67 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑6"],
+      "teachingTags": [
+        "直观乘法",
+        "凑6"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 107,
       "chapterId": 1,
-      "numbers": [1, 3, 4, 4],
+      "numbers": [
+        1,
+        1,
+        2,
+        7
+      ],
       "target": 24,
-      "answerExpression": "((1*3)*(4+4))",
-      "intendedSolution": "((1*3)*(4+4))",
+      "answerExpression": "((1+2)*(1+7))",
+      "intendedSolution": "((1+2)*(1+7))",
       "keyIdea": "先凑8，再乘3",
-      "difficulty": 2,
+      "difficulty": 3,
       "allowDivision": false,
       "hasFraction": false,
-      "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑8"],
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "凑8",
+        "中间值训练"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 108,
       "chapterId": 1,
-      "numbers": [1, 2, 3, 5],
+      "numbers": [
+        1,
+        1,
+        3,
+        5
+      ],
       "target": 24,
-      "answerExpression": "((1+2)*(3+5))",
-      "intendedSolution": "((1+2)*(3+5))",
-      "keyIdea": "先凑3，再凑8",
-      "difficulty": 2,
+      "answerExpression": "((1+3)*(1+5))",
+      "intendedSolution": "((1+3)*(1+5))",
+      "keyIdea": "先凑6，再乘4",
+      "difficulty": 3,
       "allowDivision": false,
       "hasFraction": false,
-      "estimatedSteps": 1,
-      "teachingTags": ["直观乘法", "凑8"],
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "凑6",
+        "中间值训练"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 109,
       "chapterId": 1,
-      "numbers": [3, 3, 4, 4],
+      "numbers": [
+        3,
+        3,
+        4,
+        4
+      ],
       "target": 24,
       "answerExpression": "((3*4)+(3*4))",
       "intendedSolution": "((3*4)+(3*4))",
@@ -134,43 +203,67 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观加法", "凑12"],
+      "teachingTags": [
+        "直观加法",
+        "凑12"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 110,
       "chapterId": 1,
-      "numbers": [2, 3, 4, 4],
+      "numbers": [
+        1,
+        2,
+        2,
+        6
+      ],
       "target": 24,
-      "answerExpression": "((3*4)*(4-2))",
-      "intendedSolution": "((3*4)*(4-2))",
-      "keyIdea": "先做12，再补一个2",
-      "difficulty": 2,
+      "answerExpression": "((1+2)*(2+6))",
+      "intendedSolution": "((1+2)*(2+6))",
+      "keyIdea": "先凑8，再乘3",
+      "difficulty": 3,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["直观减法", "凑12"],
+      "teachingTags": [
+        "凑8",
+        "中间值训练"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 111,
       "chapterId": 1,
-      "numbers": [3, 3, 4, 5],
+      "numbers": [
+        1,
+        2,
+        3,
+        3
+      ],
       "target": 24,
-      "answerExpression": "((3*4)*(5-3))",
-      "intendedSolution": "((3*4)*(5-3))",
-      "keyIdea": "先做12，再补一个2",
-      "difficulty": 2,
+      "answerExpression": "((1+3)*(2*3))",
+      "intendedSolution": "((1+3)*(2*3))",
+      "keyIdea": "先凑6，再乘4",
+      "difficulty": 3,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["直观减法", "凑12"],
+      "teachingTags": [
+        "凑6",
+        "中间值训练"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 112,
       "chapterId": 1,
-      "numbers": [1, 1, 6, 6],
+      "numbers": [
+        1,
+        1,
+        6,
+        6
+      ],
       "target": 24,
       "answerExpression": "((1+1)*(6+6))",
       "intendedSolution": "((1+1)*(6+6))",
@@ -179,13 +272,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 1,
-      "teachingTags": ["直观加法", "凑12"],
+      "teachingTags": [
+        "直观加法",
+        "凑12"
+      ],
       "phaseId": "novice-a"
     },
     {
       "id": 113,
       "chapterId": 1,
-      "numbers": [2, 2, 3, 6],
+      "numbers": [
+        2,
+        2,
+        3,
+        6
+      ],
       "target": 24,
       "answerExpression": "((2*3)*(6-2))",
       "intendedSolution": "((2*3)*(6-2))",
@@ -194,13 +295,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑6"],
+      "teachingTags": [
+        "中间值训练",
+        "凑6"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 114,
       "chapterId": 1,
-      "numbers": [2, 3, 5, 6],
+      "numbers": [
+        2,
+        3,
+        5,
+        6
+      ],
       "target": 24,
       "answerExpression": "((2*6)*(5-3))",
       "intendedSolution": "((2*6)*(5-3))",
@@ -209,13 +318,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑12"],
+      "teachingTags": [
+        "中间值训练",
+        "凑12"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 115,
       "chapterId": 1,
-      "numbers": [3, 4, 4, 6],
+      "numbers": [
+        3,
+        4,
+        4,
+        6
+      ],
       "target": 24,
       "answerExpression": "((3*4)*(6-4))",
       "intendedSolution": "((3*4)*(6-4))",
@@ -224,13 +341,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑12"],
+      "teachingTags": [
+        "中间值训练",
+        "凑12"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 116,
       "chapterId": 1,
-      "numbers": [2, 3, 3, 6],
+      "numbers": [
+        2,
+        3,
+        3,
+        6
+      ],
       "target": 24,
       "answerExpression": "((2*3)+(3*6))",
       "intendedSolution": "((2*3)+(3*6))",
@@ -239,13 +364,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑6"],
+      "teachingTags": [
+        "中间值训练",
+        "凑6"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 117,
       "chapterId": 1,
-      "numbers": [3, 3, 3, 6],
+      "numbers": [
+        3,
+        3,
+        3,
+        6
+      ],
       "target": 24,
       "answerExpression": "((3*6)+(3+3))",
       "intendedSolution": "((3*6)+(3+3))",
@@ -254,13 +387,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑6"],
+      "teachingTags": [
+        "中间值训练",
+        "凑6"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 118,
       "chapterId": 1,
-      "numbers": [1, 4, 4, 7],
+      "numbers": [
+        1,
+        4,
+        4,
+        7
+      ],
       "target": 24,
       "answerExpression": "((1+7)+(4*4))",
       "intendedSolution": "((1+7)+(4*4))",
@@ -269,13 +410,21 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑8"],
+      "teachingTags": [
+        "中间值训练",
+        "凑8"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 119,
       "chapterId": 1,
-      "numbers": [2, 2, 4, 8],
+      "numbers": [
+        2,
+        2,
+        4,
+        8
+      ],
       "target": 24,
       "answerExpression": "((2*4)+(2*8))",
       "intendedSolution": "((2*4)+(2*8))",
@@ -284,43 +433,67 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑8"],
+      "teachingTags": [
+        "中间值训练",
+        "凑8"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 120,
       "chapterId": 1,
-      "numbers": [2, 3, 4, 6],
+      "numbers": [
+        2,
+        3,
+        4,
+        6
+      ],
       "target": 24,
-      "answerExpression": "((2*6)+(3*4))",
-      "intendedSolution": "((2*6)+(3*4))",
-      "keyIdea": "把两边都做成12",
-      "difficulty": 4,
+      "answerExpression": "((2*4)*(6-3))",
+      "intendedSolution": "((2*4)*(6-3))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "凑12"],
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 121,
       "chapterId": 1,
-      "numbers": [1, 3, 6, 6],
+      "numbers": [
+        1,
+        3,
+        6,
+        6
+      ],
       "target": 24,
-      "answerExpression": "((1*6)+(3*6))",
-      "intendedSolution": "((1*6)+(3*6))",
-      "keyIdea": "先看到两个6，再放大其中一个",
-      "difficulty": 4,
+      "answerExpression": "((3-1)*(6+6))",
+      "intendedSolution": "((3-1)*(6+6))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "倍数意识"],
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 122,
       "chapterId": 1,
-      "numbers": [4, 4, 5, 6],
+      "numbers": [
+        4,
+        4,
+        5,
+        6
+      ],
       "target": 24,
       "answerExpression": "((4*6)*(5-4))",
       "intendedSolution": "((4*6)*(5-4))",
@@ -329,118 +502,182 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "先做1"],
+      "teachingTags": [
+        "中间值训练",
+        "先做1"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 123,
       "chapterId": 1,
-      "numbers": [1, 2, 3, 7],
+      "numbers": [
+        1,
+        2,
+        3,
+        7
+      ],
       "target": 24,
-      "answerExpression": "(1+(2+(3*7)))",
-      "intendedSolution": "(1+(2+(3*7)))",
+      "answerExpression": "((1+2)+(3*7))",
+      "intendedSolution": "((1+2)+(3*7))",
       "keyIdea": "先做21，再补3",
       "difficulty": 4,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "补差值"],
+      "teachingTags": [
+        "隐藏中间值",
+        "中间值训练"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 124,
       "chapterId": 1,
-      "numbers": [1, 2, 3, 8],
+      "numbers": [
+        1,
+        2,
+        3,
+        8
+      ],
       "target": 24,
-      "answerExpression": "((2-1)*(3*8))",
-      "intendedSolution": "((2-1)*(3*8))",
-      "keyIdea": "先做1，再保住24",
-      "difficulty": 4,
+      "answerExpression": "((1+3)*(8-2))",
+      "intendedSolution": "((1+3)*(8-2))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["中间值训练", "先做1"],
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
       "phaseId": "novice-b"
     },
     {
       "id": 125,
       "chapterId": 1,
-      "numbers": [3, 3, 4, 6],
+      "numbers": [
+        1,
+        3,
+        7,
+        9
+      ],
       "target": 24,
-      "answerExpression": "((3*4)*(6/3))",
-      "intendedSolution": "((3*4)*(6/3))",
-      "keyIdea": "先除出2，再乘12",
-      "difficulty": 5,
+      "answerExpression": "((1+7)*(9/3))",
+      "intendedSolution": "((1+7)*(9/3))",
+      "keyIdea": "先凑8，再乘3",
+      "difficulty": 4,
       "allowDivision": true,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "凑2"],
+      "teachingTags": [
+        "凑8",
+        "简单整除"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 126,
       "chapterId": 1,
-      "numbers": [2, 2, 3, 8],
+      "numbers": [
+        2,
+        2,
+        3,
+        8
+      ],
       "target": 24,
-      "answerExpression": "((2*3)*(8/2))",
-      "intendedSolution": "((2*3)*(8/2))",
-      "keyIdea": "先除出4，再乘6",
-      "difficulty": 5,
-      "allowDivision": true,
+      "answerExpression": "(3*(2+(8-2)))",
+      "intendedSolution": "(3*(2+(8-2)))",
+      "keyIdea": "先凑8，再乘3",
+      "difficulty": 6,
+      "allowDivision": false,
       "hasFraction": false,
-      "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "凑4"],
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "凑8",
+        "补差值"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 127,
       "chapterId": 1,
-      "numbers": [2, 2, 6, 6],
+      "numbers": [
+        2,
+        2,
+        4,
+        9
+      ],
       "target": 24,
-      "answerExpression": "((2+6)*(6/2))",
-      "intendedSolution": "((2+6)*(6/2))",
-      "keyIdea": "先除出3，再合成8",
-      "difficulty": 5,
-      "allowDivision": true,
+      "answerExpression": "((2*9)+(2+4))",
+      "intendedSolution": "((2*9)+(2+4))",
+      "keyIdea": "先做18，再补差值",
+      "difficulty": 4,
+      "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "凑3"],
+      "teachingTags": [
+        "隐藏中间值",
+        "中间值训练"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 128,
       "chapterId": 1,
-      "numbers": [3, 4, 4, 8],
+      "numbers": [
+        2,
+        3,
+        3,
+        9
+      ],
       "target": 24,
-      "answerExpression": "((3*4)*(8/4))",
-      "intendedSolution": "((3*4)*(8/4))",
-      "keyIdea": "先除出2，再乘12",
-      "difficulty": 5,
-      "allowDivision": true,
+      "answerExpression": "((2*9)+(3+3))",
+      "intendedSolution": "((2*9)+(3+3))",
+      "keyIdea": "先做18，再补差值",
+      "difficulty": 4,
+      "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "凑2"],
+      "teachingTags": [
+        "隐藏中间值",
+        "中间值训练"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 129,
       "chapterId": 1,
-      "numbers": [2, 3, 6, 7],
+      "numbers": [
+        1,
+        4,
+        5,
+        8
+      ],
       "target": 24,
-      "answerExpression": "((3*7)+(6/2))",
-      "intendedSolution": "((3*7)+(6/2))",
-      "keyIdea": "先做21，再补3",
+      "answerExpression": "((1+5)*(8-4))",
+      "intendedSolution": "((1+5)*(8-4))",
+      "keyIdea": "先找8，再整合另一边",
       "difficulty": 5,
-      "allowDivision": true,
+      "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "补差值"],
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 130,
       "chapterId": 1,
-      "numbers": [1, 2, 6, 6],
+      "numbers": [
+        1,
+        2,
+        6,
+        6
+      ],
       "target": 24,
       "answerExpression": "(6+(6*(1+2)))",
       "intendedSolution": "(6+(6*(1+2)))",
@@ -449,88 +686,135 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["顺序意识", "凑3"],
+      "teachingTags": [
+        "顺序意识",
+        "凑3"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 131,
       "chapterId": 1,
-      "numbers": [1, 3, 5, 6],
+      "numbers": [
+        1,
+        3,
+        5,
+        6
+      ],
       "target": 24,
-      "answerExpression": "(1+(5+(3*6)))",
-      "intendedSolution": "(1+(5+(3*6)))",
-      "keyIdea": "先做18，再补6",
-      "difficulty": 5,
+      "answerExpression": "((1+5)+(3*6))",
+      "intendedSolution": "((1+5)+(3*6))",
+      "keyIdea": "先做18，再补差值",
+      "difficulty": 4,
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["顺序意识", "补差值"],
+      "teachingTags": [
+        "隐藏中间值",
+        "中间值训练"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 132,
       "chapterId": 1,
-      "numbers": [2, 4, 5, 7],
+      "numbers": [
+        2,
+        4,
+        5,
+        7
+      ],
       "target": 24,
-      "answerExpression": "((4/2)*(5+7))",
-      "intendedSolution": "((4/2)*(5+7))",
-      "keyIdea": "先除出2，再整合12",
-      "difficulty": 6,
-      "allowDivision": true,
+      "answerExpression": "((4-2)*(5+7))",
+      "intendedSolution": "((4-2)*(5+7))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
+      "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "凑12"],
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 133,
       "chapterId": 1,
-      "numbers": [2, 4, 6, 8],
+      "numbers": [
+        2,
+        4,
+        5,
+        6
+      ],
       "target": 24,
-      "answerExpression": "((2*6)*(8/4))",
-      "intendedSolution": "((2*6)*(8/4))",
-      "keyIdea": "先乘12，再除出2",
-      "difficulty": 6,
-      "allowDivision": true,
+      "answerExpression": "((4*5)+(6-2))",
+      "intendedSolution": "((4*5)+(6-2))",
+      "keyIdea": "先找中间值，再合成24",
+      "difficulty": 4,
+      "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 2,
-      "teachingTags": ["简单整除", "顺序意识"],
+      "teachingTags": [
+        "补差值",
+        "中间值训练"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 134,
       "chapterId": 1,
-      "numbers": [1, 2, 4, 7],
+      "numbers": [
+        1,
+        2,
+        4,
+        7
+      ],
       "target": 24,
-      "answerExpression": "(2*(1+(4+7)))",
-      "intendedSolution": "(2*(1+(4+7)))",
-      "keyIdea": "先凑12，再乘2",
-      "difficulty": 6,
+      "answerExpression": "(2*(4+(1+7)))",
+      "intendedSolution": "(2*(4+(1+7)))",
+      "keyIdea": "先凑12，再补齐24",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
-      "estimatedSteps": 2,
-      "teachingTags": ["顺序意识", "凑12"],
+      "estimatedSteps": 3,
+      "teachingTags": [
+        "中间值训练"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 135,
       "chapterId": 1,
-      "numbers": [3, 4, 5, 6],
+      "numbers": [
+        1,
+        3,
+        6,
+        7
+      ],
       "target": 24,
-      "answerExpression": "(6*(5-(4-3)))",
-      "intendedSolution": "(6*(5-(4-3)))",
-      "keyIdea": "顺序关键：先把括号做成1",
-      "difficulty": 6,
+      "answerExpression": "((1+7)*(6-3))",
+      "intendedSolution": "((1+7)*(6-3))",
+      "keyIdea": "先找8，再整合另一边",
+      "difficulty": 5,
       "allowDivision": false,
       "hasFraction": false,
-      "estimatedSteps": 3,
-      "teachingTags": ["顺序意识", "先做1"],
+      "estimatedSteps": 2,
+      "teachingTags": [
+        "隐藏中间值",
+        "补差值"
+      ],
       "phaseId": "novice-c"
     },
     {
       "id": 136,
       "chapterId": 1,
-      "numbers": [2, 3, 7, 8],
+      "numbers": [
+        2,
+        3,
+        7,
+        8
+      ],
       "target": 24,
       "answerExpression": "((7-3)*(8-2))",
       "intendedSolution": "((7-3)*(8-2))",
@@ -539,7 +823,10 @@
       "allowDivision": false,
       "hasFraction": false,
       "estimatedSteps": 3,
-      "teachingTags": ["顺序意识", "结构预备"],
+      "teachingTags": [
+        "顺序意识",
+        "结构预备"
+      ],
       "phaseId": "novice-c"
     }
   ]

@@ -1,4 +1,4 @@
-import { _decorator, Button, Component, EventTouch, Label, Node, Prefab, Tween, instantiate, resources, tween, Vec3 } from 'cc';
+import { _decorator, BlockInputEvents, Button, Component, EventTouch, Label, Node, Prefab, Tween, UITransform, Widget, instantiate, resources, tween, Vec3 } from 'cc';
 
 import { GameController } from '../../controller/game/GameController';
 import { AudioUtil } from '../../core/AudioUtil';
@@ -87,6 +87,7 @@ export class GameView extends Component {
     private resolvedExitButton: Node | null = null;
     private headerStageLabel: Label | null = null;
     private hasResolvedStaticReferences: boolean = false;
+    private popupInputBlockerNode: Node | null = null;
 
     protected onLoad(): void {
         this.resolveStaticReferencesIfNeeded();
@@ -219,10 +220,17 @@ export class GameView extends Component {
 
         this.answerPopupView = answerPopupNode.getComponent(AnswerPopupView) ?? answerPopupNode.addComponent(AnswerPopupView);
         this.resultPopupView = resultPopupNode.getComponent(ResultPopupView) ?? resultPopupNode.addComponent(ResultPopupView);
+        this.answerPopupView.onVisibilityChanged = (): void => {
+            this.syncPopupInputBlocker();
+        };
         this.resultPopupView.onNextTap = (): void => {
             this.handleResultNextTap();
         };
+        this.resultPopupView.onVisibilityChanged = (): void => {
+            this.syncPopupInputBlocker();
+        };
 
+        this.ensurePopupInputBlocker();
         this.hideTransientPopups();
     }
 
@@ -526,6 +534,76 @@ export class GameView extends Component {
     private hideTransientPopups(): void {
         this.answerPopupView?.hide();
         this.resultPopupView?.hide();
+        this.syncPopupInputBlocker();
+    }
+
+    private ensurePopupInputBlocker(): void {
+        if (this.popupInputBlockerNode) {
+            this.placePopupInputBlockerBelowPopups();
+            return;
+        }
+
+        const blockerNode = new Node('PopupInputBlocker');
+        blockerNode.layer = this.node.layer;
+        blockerNode.setParent(this.node);
+
+        const blockerTransform = blockerNode.addComponent(UITransform);
+        const parentTransform = this.node.getComponent(UITransform);
+        if (parentTransform) {
+            blockerTransform.setContentSize(parentTransform.contentSize);
+        } else {
+            blockerTransform.setContentSize(720, 1280);
+        }
+
+        const widget = blockerNode.addComponent(Widget);
+        widget.isAlignLeft = true;
+        widget.isAlignRight = true;
+        widget.isAlignTop = true;
+        widget.isAlignBottom = true;
+        widget.left = 0;
+        widget.right = 0;
+        widget.top = 0;
+        widget.bottom = 0;
+        widget.alignMode = Widget.AlignMode.ALWAYS;
+
+        blockerNode.addComponent(BlockInputEvents);
+        blockerNode.active = false;
+        this.popupInputBlockerNode = blockerNode;
+        this.placePopupInputBlockerBelowPopups();
+    }
+
+    private placePopupInputBlockerBelowPopups(): void {
+        if (!this.popupInputBlockerNode) {
+            return;
+        }
+
+        const popupNodes = [this.answerPopupView?.node ?? null, this.resultPopupView?.node ?? null].filter(
+            (node): node is Node => node !== null,
+        );
+
+        if (popupNodes.length === 0) {
+            return;
+        }
+
+        const popupSiblingIndex = popupNodes.reduce(
+            (lowestIndex, popupNode) => Math.min(lowestIndex, popupNode.getSiblingIndex()),
+            popupNodes[0].getSiblingIndex(),
+        );
+        const blockerSiblingIndex = this.popupInputBlockerNode.getSiblingIndex();
+        const targetSiblingIndex = blockerSiblingIndex < popupSiblingIndex ? popupSiblingIndex - 1 : popupSiblingIndex;
+        this.popupInputBlockerNode.setSiblingIndex(Math.max(targetSiblingIndex, 0));
+    }
+
+    private syncPopupInputBlocker(): void {
+        this.ensurePopupInputBlocker();
+
+        if (!this.popupInputBlockerNode) {
+            return;
+        }
+
+        this.placePopupInputBlockerBelowPopups();
+        this.popupInputBlockerNode.active =
+            (this.answerPopupView?.node.active ?? false) || (this.resultPopupView?.node.active ?? false);
     }
 
     private renderHeader(level: LevelModel | null): void {
