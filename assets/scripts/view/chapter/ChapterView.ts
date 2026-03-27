@@ -2,6 +2,7 @@ import {
     _decorator,
     Color,
     Component,
+    EventTouch,
     instantiate,
     Label,
     Node,
@@ -97,26 +98,22 @@ export class ChapterView extends Component {
     private isPreparedRenderScheduled: boolean = false;
     private levelGridLayoutMetrics: LevelGridLayoutMetrics | null = null;
     private levelItemTemplateView: LevelItemView | null = null;
+    private readonly pressedTabButtons: Set<Node> = new Set();
+    private areTabEventsBound: boolean = false;
 
     protected onLoad(): void {
         this.resolveStaticReferencesIfNeeded();
     }
 
     protected onEnable(): void {
+        this.bindTabEvents();
         this.scheduleRenderPreparedContent();
     }
 
     protected onDisable(): void {
         this.unschedule(this.runScheduledPreparedRender);
         this.isPreparedRenderScheduled = false;
-    }
-
-    protected start(): void {
-        if (this.isInitialized) {
-            return;
-        }
-
-        void this.prepareForOpen();
+        this.unbindTabEvents();
     }
 
     public async prepareForOpen(chapterId?: ChapterId): Promise<void> {
@@ -225,11 +222,6 @@ export class ChapterView extends Component {
             if (!selectedBackground || !icon || !label) {
                 throw new Error(`ChapterView.resolveTabViews: Tab_${chapterId} is missing icon, label, or selected background`);
             }
-
-            tabNode.on(Node.EventType.TOUCH_END, () => {
-                AudioUtil.PlayNormalBtn();
-                this.handleTabSelected(chapterId);
-            });
 
             return {
                 chapterId,
@@ -375,6 +367,72 @@ export class ChapterView extends Component {
         }
 
         void this.prepareForOpen(chapterId);
+    }
+
+    private bindTabEvents(): void {
+        if (this.areTabEventsBound) {
+            return;
+        }
+
+        this.tabViews.forEach((tabView) => {
+            tabView.node.on(Node.EventType.TOUCH_START, this.handleTabTouchStart, this);
+            tabView.node.on(Node.EventType.TOUCH_END, this.handleTabTouchEnd, this);
+            tabView.node.on(Node.EventType.TOUCH_CANCEL, this.handleTabTouchCancel, this);
+        });
+        this.areTabEventsBound = true;
+    }
+
+    private unbindTabEvents(): void {
+        if (!this.areTabEventsBound) {
+            return;
+        }
+
+        this.tabViews.forEach((tabView) => {
+            tabView.node.off(Node.EventType.TOUCH_START, this.handleTabTouchStart, this);
+            tabView.node.off(Node.EventType.TOUCH_END, this.handleTabTouchEnd, this);
+            tabView.node.off(Node.EventType.TOUCH_CANCEL, this.handleTabTouchCancel, this);
+        });
+        this.pressedTabButtons.clear();
+        this.areTabEventsBound = false;
+    }
+
+    private handleTabTouchStart(event: EventTouch): void {
+        const tabNode = event.currentTarget as Node | null;
+
+        if (!tabNode) {
+            return;
+        }
+
+        this.pressedTabButtons.add(tabNode);
+    }
+
+    private handleTabTouchEnd(event: EventTouch): void {
+        const tabNode = event.currentTarget as Node | null;
+
+        if (!tabNode || !this.pressedTabButtons.has(tabNode)) {
+            return;
+        }
+
+        this.pressedTabButtons.delete(tabNode);
+
+        const tabView = this.tabViews.find((candidate) => candidate.node === tabNode) ?? null;
+
+        if (!tabView || tabView.chapterId === this.selectedChapterId) {
+            return;
+        }
+
+        AudioUtil.PlayNormalBtn();
+        this.handleTabSelected(tabView.chapterId);
+    }
+
+    private handleTabTouchCancel(event: EventTouch): void {
+        const tabNode = event.currentTarget as Node | null;
+
+        if (!tabNode) {
+            return;
+        }
+
+        this.pressedTabButtons.delete(tabNode);
     }
 
     private readonly handleLevelTap = (levelId: number): void => {

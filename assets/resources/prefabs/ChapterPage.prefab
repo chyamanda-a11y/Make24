@@ -2939,8 +2939,8 @@
     "__prefab": {
       "__id__": 124
     },
-    "bounceDuration": 0.23,
-    "brake": 0.75,
+    "bounceDuration": 0.38,
+    "brake": 0.4,
     "elastic": true,
     "inertia": true,
     "horizontal": false,
