@@ -25,6 +25,10 @@ const STRUCTURED_CHAPTER_RULES = {
         },
         forbidFractions: true,
         forbidDivisionPhases: [],
+        phaseMinFakeAnchorTrapCounts: {
+            'advanced-b': 4,
+            'advanced-c': 6,
+        },
     },
     3: {
         requiredLevelCount: 36,
@@ -35,11 +39,15 @@ const STRUCTURED_CHAPTER_RULES = {
         },
         forbidDivisionPhases: [],
         forbidFractionsInPhases: ['challenge-a'],
-        minFractionCount: 4,
-        maxFractionCount: 6,
-        fractionWindowSize: 6,
-        maxFractionsPerWindow: 2,
-        forbidConsecutiveFractions: true,
+        minFractionCount: 10,
+        phaseMinFractionCounts: {
+            'challenge-b': 5,
+            'challenge-c': 5,
+        },
+        phaseMaxSolutionCounts: {
+            'challenge-b': 4,
+            'challenge-c': 2,
+        },
     },
 };
 
@@ -367,6 +375,11 @@ function validateStructuredChapter(config, errors) {
         }
     });
 
+    const analyzedLevels = config.levels.map((level) => ({
+        level,
+        analysis: analyzeLevel(level),
+    }));
+
     chapterRules.forbidDivisionPhases.forEach((phaseId) => {
         const phaseLevels = config.levels.filter((level) => level.phaseId === phaseId);
 
@@ -397,6 +410,18 @@ function validateStructuredChapter(config, errors) {
         );
     }
 
+    if (chapterRules.phaseMinFractionCounts) {
+        Object.entries(chapterRules.phaseMinFractionCounts).forEach(([phaseId, expectedCount]) => {
+            const phaseFractionCount = config.levels.filter((level) => level.phaseId === phaseId && level.hasFraction).length;
+
+            if (phaseFractionCount < expectedCount) {
+                errors.push(
+                    `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should contain at least ${expectedCount} fraction-tagged levels, got ${phaseFractionCount}`,
+                );
+            }
+        });
+    }
+
     if (typeof chapterRules.maxFractionCount === 'number' && fractionLevels.length > chapterRules.maxFractionCount) {
         errors.push(
             `chapter_${String(config.chapterId).padStart(2, '0')} should contain at most ${chapterRules.maxFractionCount} fraction-tagged levels, got ${fractionLevels.length}`,
@@ -424,6 +449,36 @@ function validateStructuredChapter(config, errors) {
                 break;
             }
         }
+    }
+
+    if (chapterRules.phaseMinFakeAnchorTrapCounts) {
+        Object.entries(chapterRules.phaseMinFakeAnchorTrapCounts).forEach(([phaseId, expectedCount]) => {
+            const fakeAnchorTrapCount = analyzedLevels.filter(({ level, analysis }) =>
+                level.phaseId === phaseId
+                && analysis.dominantSolution
+                && analysis.dominantSolution.isFakeAnchorTrap,
+            ).length;
+
+            if (fakeAnchorTrapCount < expectedCount) {
+                errors.push(
+                    `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should contain at least ${expectedCount} fake-anchor levels, got ${fakeAnchorTrapCount}`,
+                );
+            }
+        });
+    }
+
+    if (chapterRules.phaseMaxSolutionCounts) {
+        Object.entries(chapterRules.phaseMaxSolutionCounts).forEach(([phaseId, maxSolutionCount]) => {
+            const offendingLevel = analyzedLevels.find(({ level, analysis }) =>
+                level.phaseId === phaseId && analysis.allSolutionCount > maxSolutionCount,
+            );
+
+            if (offendingLevel) {
+                errors.push(
+                    `chapter_${String(config.chapterId).padStart(2, '0')} ${phaseId} should keep allSolutionCount <= ${maxSolutionCount}, found ${offendingLevel.analysis.allSolutionCount} on level id ${offendingLevel.level.id}`,
+                );
+            }
+        });
     }
 
     let sameIdeaRunLength = 1;

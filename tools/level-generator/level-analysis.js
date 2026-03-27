@@ -95,6 +95,74 @@ function createLeafState(number) {
     };
 }
 
+function createValuePairKey(left, right) {
+    const sortedValues = [left, right].sort((a, b) => a - b);
+    return `${sortedValues[0]},${sortedValues[1]}`;
+}
+
+function createPairResultProfile(numbers) {
+    const product24Pairs = [];
+    const sum24Pairs = [];
+    const sum12Pairs = [];
+    const usedDouble12PairKeys = new Set();
+
+    for (let leftIndex = 0; leftIndex < numbers.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < numbers.length; rightIndex += 1) {
+            const left = numbers[leftIndex];
+            const right = numbers[rightIndex];
+            const pairKey = createValuePairKey(left, right);
+
+            if (left * right === GOAL_VALUE) {
+                product24Pairs.push(pairKey);
+            }
+
+            if (left + right === GOAL_VALUE) {
+                sum24Pairs.push(pairKey);
+            }
+
+            if (left + right === 12) {
+                sum12Pairs.push({
+                    pairKey,
+                    indices: [leftIndex, rightIndex],
+                });
+            }
+        }
+    }
+
+    const double12PairKeys = [];
+
+    for (let leftIndex = 0; leftIndex < sum12Pairs.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < sum12Pairs.length; rightIndex += 1) {
+            const leftPair = sum12Pairs[leftIndex];
+            const rightPair = sum12Pairs[rightIndex];
+            const usedIndexSet = new Set([...leftPair.indices, ...rightPair.indices]);
+
+            if (usedIndexSet.size !== numbers.length) {
+                continue;
+            }
+
+            const double12Key = [leftPair.pairKey, rightPair.pairKey].sort().join('|');
+
+            if (usedDouble12PairKeys.has(double12Key)) {
+                continue;
+            }
+
+            usedDouble12PairKeys.add(double12Key);
+            double12PairKeys.push(double12Key);
+        }
+    }
+
+    return {
+        product24Pairs,
+        sum24Pairs,
+        double12PairKeys,
+        hasAny:
+            product24Pairs.length > 0
+            || sum24Pairs.length > 0
+            || double12PairKeys.length > 0,
+    };
+}
+
 function createMergedState(left, right, operator, result) {
     return {
         value: result,
@@ -519,6 +587,26 @@ function hasDirectLeafPairResult(node, operator, expectedValue) {
         || hasDirectLeafPairResult(node.right, operator, expectedValue);
 }
 
+function hasDirectLeafPairValues(node, operator, leftValue, rightValue) {
+    if (node.type === 'num') {
+        return false;
+    }
+
+    const isCommutative = operator === '+' || operator === '*';
+    const currentNodeMatches =
+        node.op === operator
+        && node.left.type === 'num'
+        && node.right.type === 'num'
+        && (
+            (node.left.value === leftValue && node.right.value === rightValue)
+            || (isCommutative && node.left.value === rightValue && node.right.value === leftValue)
+        );
+
+    return currentNodeMatches
+        || hasDirectLeafPairValues(node.left, operator, leftValue, rightValue)
+        || hasDirectLeafPairValues(node.right, operator, leftValue, rightValue);
+}
+
 function hasVisibleFactorAnchor(node, factors) {
     if (node.type === 'num') {
         return false;
@@ -534,6 +622,24 @@ function hasVisibleFactorAnchor(node, factors) {
     return hasMatchingFactorBranch
         || hasVisibleFactorAnchor(node.left, factors)
         || hasVisibleFactorAnchor(node.right, factors);
+}
+
+function countDirectLeafPairResult(node, operator, expectedValue) {
+    if (node.type === 'num') {
+        return 0;
+    }
+
+    const currentNodeCount =
+        node.op === operator
+        && node.left.type === 'num'
+        && node.right.type === 'num'
+        && isIntegerValue(getNodeResult(node), expectedValue)
+            ? 1
+            : 0;
+
+    return currentNodeCount
+        + countDirectLeafPairResult(node.left, operator, expectedValue)
+        + countDirectLeafPairResult(node.right, operator, expectedValue);
 }
 
 function hasResolvedTargetWithIdentityCleanup(node) {
@@ -631,6 +737,38 @@ function inferHumanIntuitionScore(solution) {
     return score;
 }
 
+function inferUsesSurfaceAnchor(solution) {
+    const profile = solution.surfaceAnchorProfile;
+
+    if (!profile.hasAny) {
+        return false;
+    }
+
+    const usesProduct24Pair = profile.product24Pairs.some((pairKey) => {
+        const [left, right] = pairKey.split(',').map(Number);
+        return hasDirectLeafPairValues(solution.node, '*', left, right);
+    });
+
+    if (usesProduct24Pair) {
+        return true;
+    }
+
+    const usesSum24Pair = profile.sum24Pairs.some((pairKey) => {
+        const [left, right] = pairKey.split(',').map(Number);
+        return hasDirectLeafPairValues(solution.node, '+', left, right);
+    });
+
+    if (usesSum24Pair) {
+        return true;
+    }
+
+    if (profile.double12PairKeys.length === 0) {
+        return false;
+    }
+
+    return countDirectLeafPairResult(solution.node, '+', 12) >= 2;
+}
+
 function compareDominance(left, right) {
     const comparisons = [
         left.humanIntuitionScore - right.humanIntuitionScore,
@@ -682,6 +820,7 @@ function inferEstimatedSteps(solution) {
 function decorateSolution(numbers, state) {
     const operationSet = new Set(state.meta.operations);
     const uniqueNumbers = new Set(numbers);
+    const surfaceAnchorProfile = createPairResultProfile(numbers);
     const solution = {
         answerExpression: state.expr,
         numbers,
@@ -701,6 +840,7 @@ function decorateSolution(numbers, state) {
         numberSum: numbers.reduce((sum, value) => sum + value, 0),
         uniqueNumberCount: uniqueNumbers.size,
         structureDepth: state.meta.depth,
+        surfaceAnchorProfile,
     };
 
     solution.topOperator = getTopOperator(solution.node);
@@ -713,6 +853,8 @@ function decorateSolution(numbers, state) {
     solution.dominantKeyIdea = inferKeyIdea(solution);
     solution.dominantTags = inferTags(solution);
     solution.humanIntuitionScore = inferHumanIntuitionScore(solution);
+    solution.usesSurfaceAnchor = inferUsesSurfaceAnchor(solution);
+    solution.isFakeAnchorTrap = solution.surfaceAnchorProfile.hasAny && !solution.usesSurfaceAnchor;
 
     return solution;
 }
@@ -729,6 +871,22 @@ function solveAll(numbers) {
 
 function createNumbersKey(numbers) {
     return [...numbers].sort((left, right) => left - right).join(',');
+}
+
+function classifySolutionCountBand(allSolutionCount) {
+    if (allSolutionCount <= 1) {
+        return 'unique';
+    }
+
+    if (allSolutionCount <= 3) {
+        return 'narrow';
+    }
+
+    if (allSolutionCount <= 8) {
+        return 'medium';
+    }
+
+    return 'wide';
 }
 
 function getPhaseRule(phaseId) {
@@ -764,12 +922,14 @@ function getPhaseRule(phaseId) {
             maxDifficulty: 7,
             maxEstimatedSteps: 3,
             requireOneOf: ['usesSubtraction', 'order-sensitive'],
+            minFakeAnchorTrapCountHint: 1,
         },
         'advanced-c': {
             minDifficulty: 5,
             maxDifficulty: 8,
             maxEstimatedSteps: 3,
             requireOneOf: ['hidden-anchor', 'order-sensitive', 'make-1-then-scale'],
+            minFakeAnchorTrapCountHint: 1,
         },
         'challenge-a': {
             minDifficulty: 4,
@@ -780,18 +940,20 @@ function getPhaseRule(phaseId) {
             minDifficulty: 5,
             maxDifficulty: 9,
             maxEstimatedSteps: 3,
+            maxSolutionCount: 4,
         },
         'challenge-c': {
             minDifficulty: 5,
             maxDifficulty: 9,
             maxEstimatedSteps: 3,
+            maxSolutionCount: 2,
         },
     };
 
     return chapterRules[phaseId] ?? null;
 }
 
-function getPhaseMatchReasons(phaseId, solution) {
+function getPhaseMatchReasons(phaseId, solution, analysis = null) {
     const reasons = [];
     const rule = getPhaseRule(phaseId);
 
@@ -841,6 +1003,17 @@ function getPhaseMatchReasons(phaseId, solution) {
         }
     }
 
+    const hasVisibleSurfaceAnchor = solution.surfaceAnchorProfile.hasAny;
+    const shouldEnforceFakeAnchorTrap = (phaseId === 'advanced-b' || phaseId === 'advanced-c') && hasVisibleSurfaceAnchor;
+
+    if (shouldEnforceFakeAnchorTrap && !solution.isFakeAnchorTrap) {
+        reasons.push(`${phaseId} should avoid directly consuming visible surface anchors`);
+    }
+
+    if (typeof rule.maxSolutionCount === 'number' && analysis && analysis.allSolutionCount > rule.maxSolutionCount) {
+        reasons.push(`${phaseId} requires allSolutionCount <= ${rule.maxSolutionCount}, got ${analysis.allSolutionCount}`);
+    }
+
     return reasons;
 }
 
@@ -880,11 +1053,13 @@ function analyzeNumbers(numbers) {
     const allSolutions = solveAll(numbers);
     const dominantSolution = allSolutions[0] ?? null;
     const runnerUpSolution = allSolutions[1] ?? null;
+    const allSolutionCount = allSolutions.length;
 
     return {
         numbersKey: createNumbersKey(numbers),
         allSolutions,
-        allSolutionCount: allSolutions.length,
+        allSolutionCount,
+        solutionCountBand: classifySolutionCountBand(allSolutionCount),
         dominantSolution,
         runnerUpSolution,
         alternativeIssue: dominantSolution ? getAlternativeDominanceIssue(dominantSolution, runnerUpSolution) : null,
@@ -902,7 +1077,7 @@ function analyzeLevel(level) {
         };
     }
 
-    const phaseMismatchReasons = getPhaseMatchReasons(level.phaseId, analysis.dominantSolution);
+    const phaseMismatchReasons = getPhaseMatchReasons(level.phaseId, analysis.dominantSolution, analysis);
     const rejectReasons = [];
 
     if (analysis.dominantSolution.answerExpression !== level.answerExpression) {

@@ -61,6 +61,12 @@ const CHAPTER_DEFINITIONS = [
                 targetSteps: 3,
                 preferFamilies: ['order-sensitive', 'hidden-anchor'],
                 preferTags: ['顺序意识'],
+                quotas: [
+                    {
+                        count: 4,
+                        predicate: (candidate) => candidate.solution.isFakeAnchorTrap,
+                    },
+                ],
             },
             {
                 phaseId: 'advanced-c',
@@ -69,6 +75,12 @@ const CHAPTER_DEFINITIONS = [
                 targetSteps: 3,
                 preferFamilies: ['hidden-anchor', 'order-sensitive', 'divide-then-combine'],
                 preferTags: ['隐藏中间值', '顺序意识'],
+                quotas: [
+                    {
+                        count: 6,
+                        predicate: (candidate) => candidate.solution.isFakeAnchorTrap,
+                    },
+                ],
             },
         ],
     },
@@ -98,6 +110,10 @@ const CHAPTER_DEFINITIONS = [
                         count: 4,
                         predicate: (candidate) => candidate.hasFraction,
                     },
+                    {
+                        count: 4,
+                        predicate: (candidate) => candidate.allSolutionCount <= 4,
+                    },
                 ],
             },
             {
@@ -109,8 +125,12 @@ const CHAPTER_DEFINITIONS = [
                 preferTags: ['顺序意识', '分数驱动'],
                 quotas: [
                     {
-                        count: 1,
+                        count: 2,
                         predicate: (candidate) => candidate.hasFraction,
+                    },
+                    {
+                        count: 4,
+                        predicate: (candidate) => candidate.allSolutionCount <= 2,
                     },
                 ],
             },
@@ -231,6 +251,34 @@ function scoreCandidateForPhase(phaseId, candidate) {
         score -= 3;
     }
 
+    if (phase.phaseId === 'advanced-b' || phase.phaseId === 'advanced-c') {
+        if (candidate.solution.isFakeAnchorTrap) {
+            score -= 8;
+        } else if (candidate.solution.surfaceAnchorProfile.hasAny) {
+            score += 14;
+        }
+    }
+
+    if (phase.phaseId === 'challenge-b') {
+        score += candidate.allSolutionCount * 2;
+
+        if (candidate.allSolutionCount <= 2) {
+            score -= 8;
+        } else if (candidate.allSolutionCount <= 4) {
+            score -= 4;
+        }
+    }
+
+    if (phase.phaseId === 'challenge-c') {
+        score += candidate.allSolutionCount * 3;
+
+        if (candidate.allSolutionCount <= 1) {
+            score -= 10;
+        } else if (candidate.allSolutionCount <= 2) {
+            score -= 6;
+        }
+    }
+
     return score;
 }
 
@@ -260,6 +308,7 @@ function createCandidate(numbers, phaseId, analysis) {
         structureFamily: dominantSolution.structureFamily,
         solution: dominantSolution,
         allSolutionCount: analysis.allSolutionCount,
+        solutionCountBand: analysis.solutionCountBand,
     };
 
     candidate.score = scoreCandidateForPhase(phaseId, candidate);
@@ -278,7 +327,7 @@ function analyzeCandidates() {
         }
 
         for (const phase of PHASE_DEFINITIONS) {
-            const phaseMismatchReasons = getPhaseMatchReasons(phase.phaseId, analysis.dominantSolution);
+            const phaseMismatchReasons = getPhaseMatchReasons(phase.phaseId, analysis.dominantSolution, analysis);
 
             if (phaseMismatchReasons.length > 0) {
                 continue;
@@ -501,6 +550,14 @@ function summarizeChapter(chapterDefinition, levels) {
     console.log(`  phases=${JSON.stringify(phaseSummary)}`);
 }
 
+function getPhaseSelectionPriority(phaseConfig) {
+    const quotaWeight = Array.isArray(phaseConfig.quotas)
+        ? phaseConfig.quotas.reduce((sum, quota) => sum + quota.count, 0) * 10
+        : 0;
+
+    return quotaWeight + phaseConfig.targetDifficulty * 3 + phaseConfig.targetSteps;
+}
+
 function seedUsedKeysFromLockedChapters(existingConfigs, selectedChapterIds, usedKeys) {
     if (!selectedChapterIds) {
         return;
@@ -535,17 +592,23 @@ function run() {
     );
     const usedKeys = new Set();
     const selectedChapterIds = requestedChapterIds ?? null;
+    const shouldReuseExistingSelection = selectedChapterIds === null;
 
     seedUsedKeysFromLockedChapters(existingConfigs, selectedChapterIds, usedKeys);
 
     for (const chapterDefinition of selectedChapterDefinitions) {
         const existingConfig = existingConfigs.get(chapterDefinition.chapterId);
-        const selectedLevels = [];
+        const phaseSelections = new Map();
+        const phaseConfigsForSelection = [...chapterDefinition.phases].sort(
+            (left, right) => getPhaseSelectionPriority(right) - getPhaseSelectionPriority(left),
+        );
 
-        for (const phaseConfig of chapterDefinition.phases) {
+        for (const phaseConfig of phaseConfigsForSelection) {
             const phaseCandidatesForSelection = phaseCandidates.get(phaseConfig.phaseId) ?? [];
             const phaseCandidateMap = phaseCandidateIndex.get(phaseConfig.phaseId) ?? new Map();
-            const existingPhaseLevels = existingConfig.levels.filter((level) => level.phaseId === phaseConfig.phaseId);
+            const existingPhaseLevels = shouldReuseExistingSelection
+                ? existingConfig.levels.filter((level) => level.phaseId === phaseConfig.phaseId)
+                : [];
             const phaseLevels = selectPhaseLevels(
                 phaseConfig,
                 phaseCandidatesForSelection,
@@ -555,8 +618,12 @@ function run() {
                 chapterDefinition.chapterName,
             );
 
-            selectedLevels.push(...phaseLevels);
+            phaseSelections.set(phaseConfig.phaseId, phaseLevels);
         }
+
+        const selectedLevels = chapterDefinition.phases.flatMap(
+            (phaseConfig) => phaseSelections.get(phaseConfig.phaseId) ?? [],
+        );
 
         const nextConfig = buildChapterConfig(chapterDefinition, selectedLevels);
         writeJson(chapterDefinition.fileName, nextConfig);
