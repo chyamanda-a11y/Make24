@@ -127,6 +127,39 @@ const PHASE_DEFINITIONS = CHAPTER_DEFINITIONS.flatMap((chapter) =>
     })),
 );
 
+function parseRequestedChapterIds(rawArgs) {
+    const requestedChapterIds = new Set();
+
+    for (let index = 0; index < rawArgs.length; index += 1) {
+        if (rawArgs[index] !== '--chapter') {
+            continue;
+        }
+
+        const rawValue = rawArgs[index + 1] ?? '';
+
+        if (rawValue.trim().length === 0) {
+            throw new Error('Missing chapter id after --chapter');
+        }
+
+        rawValue.split(',').forEach((rawChapterId) => {
+            const chapterId = Number(rawChapterId.trim());
+
+            if (!Number.isInteger(chapterId) || chapterId < 1) {
+                throw new Error(`Invalid chapter id "${rawChapterId}"`);
+            }
+
+            requestedChapterIds.add(chapterId);
+        });
+        index += 1;
+    }
+
+    if (requestedChapterIds.size === 0) {
+        return null;
+    }
+
+    return requestedChapterIds;
+}
+
 function generateSortedTuples(min, max, length, start = min, prefix = [], result = []) {
     if (prefix.length === length) {
         result.push([...prefix]);
@@ -295,28 +328,20 @@ function loadChapterConfig(fileName) {
 }
 
 function resolveExistingPhaseSelection(existingLevels, phaseCandidateIndex, chapterName, phaseId) {
-    return existingLevels.map((level, index) => {
+    return existingLevels.reduce((selection, level, index) => {
         const key = createNumbersKey(level.numbers);
         const candidate = phaseCandidateIndex.get(key);
 
         if (!candidate) {
-            throw new Error(
-                `${chapterName} ${phaseId} existing level ${index + 1} with key ${key} is missing from candidate pool`,
+            console.warn(
+                `${chapterName} ${phaseId} existing level ${index + 1} with key ${key} is no longer in candidate pool and will be replaced`,
             );
+            return selection;
         }
 
-        return {
-            ...candidate,
-            answerExpression: level.answerExpression,
-            intendedSolution: level.intendedSolution ?? level.answerExpression,
-            keyIdea: level.keyIdea,
-            difficulty: level.difficulty,
-            allowDivision: level.allowDivision,
-            hasFraction: level.hasFraction,
-            estimatedSteps: level.estimatedSteps,
-            teachingTags: level.teachingTags,
-        };
-    });
+        selection.push(candidate);
+        return selection;
+    }, []);
 }
 
 function seedSelection(initialSelection, usedKeys, chapterName, phaseId) {
@@ -324,7 +349,10 @@ function seedSelection(initialSelection, usedKeys, chapterName, phaseId) {
 
     for (const candidate of initialSelection) {
         if (usedKeys.has(candidate.key)) {
-            throw new Error(`${chapterName} ${phaseId} has duplicate numbersKey ${candidate.key} in locked selection`);
+            console.warn(
+                `${chapterName} ${phaseId} locked selection key ${candidate.key} conflicts with another kept level and will be replaced`,
+            );
+            continue;
         }
 
         usedKeys.add(candidate.key);
@@ -374,6 +402,35 @@ function pickCandidates(candidates, selection, usedKeys, count, predicate = () =
     }
 }
 
+function rebalanceKeyIdeaRuns(levels, maxRunLength = 2) {
+    const reorderedLevels = [...levels];
+
+    for (let index = maxRunLength; index < reorderedLevels.length; index += 1) {
+        const repeatedKeyIdea = reorderedLevels[index].keyIdea;
+
+        if (
+            repeatedKeyIdea !== reorderedLevels[index - 1].keyIdea
+            || repeatedKeyIdea !== reorderedLevels[index - 2].keyIdea
+        ) {
+            continue;
+        }
+
+        const swapIndex = reorderedLevels.findIndex(
+            (candidate, candidateIndex) => candidateIndex > index && candidate.keyIdea !== repeatedKeyIdea,
+        );
+
+        if (swapIndex < 0) {
+            continue;
+        }
+
+        const [replacementCandidate] = reorderedLevels.splice(swapIndex, 1);
+
+        reorderedLevels.splice(index, 0, replacementCandidate);
+    }
+
+    return reorderedLevels;
+}
+
 function selectPhaseLevels(phaseConfig, phaseCandidates, phaseCandidateIndex, usedKeys, existingLevels, chapterName) {
     const initialSelection = resolveExistingPhaseSelection(
         existingLevels,
@@ -397,7 +454,7 @@ function selectPhaseLevels(phaseConfig, phaseCandidates, phaseCandidateIndex, us
         );
     }
 
-    return selection;
+    return rebalanceKeyIdeaRuns(selection);
 }
 
 function buildLevelRecord(chapterId, index, candidate) {
@@ -444,15 +501,44 @@ function summarizeChapter(chapterDefinition, levels) {
     console.log(`  phases=${JSON.stringify(phaseSummary)}`);
 }
 
+function seedUsedKeysFromLockedChapters(existingConfigs, selectedChapterIds, usedKeys) {
+    if (!selectedChapterIds) {
+        return;
+    }
+
+    existingConfigs.forEach((config, chapterId) => {
+        if (selectedChapterIds.has(chapterId)) {
+            return;
+        }
+
+        config.levels.forEach((level) => {
+            usedKeys.add(createNumbersKey(level.numbers));
+        });
+    });
+}
+
 function run() {
+    const requestedChapterIds = parseRequestedChapterIds(process.argv.slice(2));
+    const selectedChapterDefinitions = requestedChapterIds
+        ? CHAPTER_DEFINITIONS.filter((definition) => requestedChapterIds.has(definition.chapterId))
+        : CHAPTER_DEFINITIONS;
+
+    if (requestedChapterIds && selectedChapterDefinitions.length !== requestedChapterIds.size) {
+        const knownChapterIds = CHAPTER_DEFINITIONS.map((definition) => definition.chapterId).join(', ');
+        throw new Error(`Unknown chapter id in --chapter. Known chapter ids: ${knownChapterIds}`);
+    }
+
     const phaseCandidates = analyzeCandidates();
     const phaseCandidateIndex = buildPhaseCandidateIndex(phaseCandidates);
     const existingConfigs = new Map(
         CHAPTER_DEFINITIONS.map((definition) => [definition.chapterId, loadChapterConfig(definition.fileName)]),
     );
     const usedKeys = new Set();
+    const selectedChapterIds = requestedChapterIds ?? null;
 
-    for (const chapterDefinition of CHAPTER_DEFINITIONS) {
+    seedUsedKeysFromLockedChapters(existingConfigs, selectedChapterIds, usedKeys);
+
+    for (const chapterDefinition of selectedChapterDefinitions) {
         const existingConfig = existingConfigs.get(chapterDefinition.chapterId);
         const selectedLevels = [];
 

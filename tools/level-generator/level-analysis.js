@@ -287,6 +287,10 @@ function hasIntermediateValue(intermediates, target) {
     return intermediates.some((value) => isInteger(value) && value.numerator === target);
 }
 
+function isIntegerValue(value, expected) {
+    return isInteger(value) && value.numerator === expected;
+}
+
 function getTopOperator(node) {
     return node.type === 'op' ? node.op : null;
 }
@@ -499,8 +503,137 @@ function inferTags(solution) {
     return tags.slice(0, 2);
 }
 
+function hasDirectLeafPairResult(node, operator, expectedValue) {
+    if (node.type === 'num') {
+        return false;
+    }
+
+    const isDirectPair =
+        node.op === operator
+        && node.left.type === 'num'
+        && node.right.type === 'num'
+        && isIntegerValue(getNodeResult(node), expectedValue);
+
+    return isDirectPair
+        || hasDirectLeafPairResult(node.left, operator, expectedValue)
+        || hasDirectLeafPairResult(node.right, operator, expectedValue);
+}
+
+function hasVisibleFactorAnchor(node, factors) {
+    if (node.type === 'num') {
+        return false;
+    }
+
+    const result = getNodeResult(node);
+    const sortedFactors = [...factors].sort((left, right) => left - right);
+    const hasMatchingFactorBranch =
+        node.op === '*'
+        && isInteger(result)
+        && sortedFactors.includes(Math.abs(result.numerator));
+
+    return hasMatchingFactorBranch
+        || hasVisibleFactorAnchor(node.left, factors)
+        || hasVisibleFactorAnchor(node.right, factors);
+}
+
+function hasResolvedTargetWithIdentityCleanup(node) {
+    if (node.type === 'num') {
+        return false;
+    }
+
+    const leftValue = getNodeResult(node.left);
+    const rightValue = getNodeResult(node.right);
+
+    const currentNodeResolvesTargetWithIdentity =
+        (node.op === '*' && (
+            (isIntegerValue(leftValue, GOAL_VALUE) && isIntegerValue(rightValue, 1))
+            || (isIntegerValue(leftValue, 1) && isIntegerValue(rightValue, GOAL_VALUE))
+        ))
+        || (node.op === '+' && (
+            (isIntegerValue(leftValue, GOAL_VALUE) && isIntegerValue(rightValue, 0))
+            || (isIntegerValue(leftValue, 0) && isIntegerValue(rightValue, GOAL_VALUE))
+        ))
+        || (node.op === '-' && isIntegerValue(leftValue, GOAL_VALUE) && isIntegerValue(rightValue, 0))
+        || (node.op === '/' && isIntegerValue(leftValue, GOAL_VALUE) && isIntegerValue(rightValue, 1));
+
+    return currentNodeResolvesTargetWithIdentity
+        || hasResolvedTargetWithIdentityCleanup(node.left)
+        || hasResolvedTargetWithIdentityCleanup(node.right);
+}
+
+function inferHumanIntuitionScore(solution) {
+    let score = 0;
+
+    score += solution.fractionCount * 12;
+    score += solution.negativeCount * 8;
+    score += solution.usesDivision ? 4 : 0;
+    score += solution.hasCounterIntuitiveDivision ? 6 : 0;
+    score += solution.usesSubtraction ? 1 : 0;
+    score += Math.max(solution.estimatedSteps - 2, 0) * 3;
+    score += solution.maxAbsIntermediate > GOAL_VALUE ? 2 : 0;
+    score += solution.imbalance;
+    score += solution.hasTrivialIdentityPattern ? 1 : 0;
+
+    switch (solution.structureFamily) {
+    case 'double-same-merge':
+        score -= 8;
+        break;
+    case 'make-12-then-double':
+        score -= 7;
+        break;
+    case 'make-8-then-times-3':
+    case 'make-6-then-times-4':
+        score -= 6;
+        break;
+    case 'make-1-then-scale':
+        score -= 5;
+        break;
+    case 'divide-then-combine':
+        score -= 1;
+        break;
+    case 'hidden-anchor':
+        score += 3;
+        break;
+    case 'order-sensitive':
+        score += 5;
+        break;
+    case 'fraction-driven':
+        score += 8;
+        break;
+    default:
+        break;
+    }
+
+    if (hasDirectLeafPairResult(solution.node, '*', GOAL_VALUE)) {
+        score -= 8;
+    }
+
+    if (hasDirectLeafPairResult(solution.node, '+', GOAL_VALUE)) {
+        score -= 7;
+    }
+
+    if (hasVisibleFactorAnchor(solution.node, [3, 8])) {
+        score -= 4;
+    }
+
+    if (hasVisibleFactorAnchor(solution.node, [4, 6])) {
+        score -= 4;
+    }
+
+    if (hasVisibleFactorAnchor(solution.node, [12])) {
+        score -= 3;
+    }
+
+    if (hasResolvedTargetWithIdentityCleanup(solution.node)) {
+        score -= 5;
+    }
+
+    return score;
+}
+
 function compareDominance(left, right) {
     const comparisons = [
+        left.humanIntuitionScore - right.humanIntuitionScore,
         left.fractionCount - right.fractionCount,
         left.negativeCount - right.negativeCount,
         Number(left.usesDivision) - Number(right.usesDivision),
@@ -579,6 +712,7 @@ function decorateSolution(numbers, state) {
     solution.dominantDifficulty = inferDifficulty(solution);
     solution.dominantKeyIdea = inferKeyIdea(solution);
     solution.dominantTags = inferTags(solution);
+    solution.humanIntuitionScore = inferHumanIntuitionScore(solution);
 
     return solution;
 }
@@ -712,6 +846,10 @@ function getPhaseMatchReasons(phaseId, solution) {
 
 function getAlternativeDominanceIssue(dominantSolution, runnerUpSolution) {
     if (!runnerUpSolution) {
+        return null;
+    }
+
+    if (runnerUpSolution.humanIntuitionScore > dominantSolution.humanIntuitionScore) {
         return null;
     }
 

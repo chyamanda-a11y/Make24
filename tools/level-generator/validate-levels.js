@@ -43,6 +43,39 @@ const STRUCTURED_CHAPTER_RULES = {
     },
 };
 
+function parseRequestedChapterIds(rawArgs) {
+    const requestedChapterIds = new Set();
+
+    for (let index = 0; index < rawArgs.length; index += 1) {
+        if (rawArgs[index] !== '--chapter') {
+            continue;
+        }
+
+        const rawValue = rawArgs[index + 1] ?? '';
+
+        if (rawValue.trim().length === 0) {
+            throw new Error('Missing chapter id after --chapter');
+        }
+
+        rawValue.split(',').forEach((rawChapterId) => {
+            const chapterId = Number(rawChapterId.trim());
+
+            if (!Number.isInteger(chapterId) || chapterId < 1) {
+                throw new Error(`Invalid chapter id "${rawChapterId}"`);
+            }
+
+            requestedChapterIds.add(chapterId);
+        });
+        index += 1;
+    }
+
+    if (requestedChapterIds.size === 0) {
+        return null;
+    }
+
+    return requestedChapterIds;
+}
+
 function createRational(numerator, denominator = 1) {
     if (denominator === 0) {
         throw new Error('Division by zero');
@@ -498,13 +531,22 @@ function summarizeConfig(config) {
 }
 
 function run() {
+    const requestedChapterIds = parseRequestedChapterIds(process.argv.slice(2));
     const errors = [];
     const configs = CONFIG_FILES.map((fileName) => ({
         fileName,
         config: loadConfig(fileName),
     }));
+    const selectedConfigs = requestedChapterIds
+        ? configs.filter(({ config }) => requestedChapterIds.has(config.chapterId))
+        : configs;
 
-    configs.forEach(({ fileName, config }) => {
+    if (requestedChapterIds && selectedConfigs.length !== requestedChapterIds.size) {
+        const knownChapterIds = configs.map(({ config }) => config.chapterId).join(', ');
+        throw new Error(`Unknown chapter id in --chapter. Known chapter ids: ${knownChapterIds}`);
+    }
+
+    selectedConfigs.forEach(({ fileName, config }) => {
 
         if (!Number.isInteger(config.chapterId) || config.chapterId < 1) {
             errors.push(`${fileName} chapterId must be a positive integer`);
