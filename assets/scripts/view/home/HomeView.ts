@@ -9,21 +9,24 @@ import {
 
 import { AudioUtil } from '../../core/AudioUtil';
 
-const { ccclass } = _decorator;
+const { ccclass, property } = _decorator;
 
 const DESIGN_WIDTH = 720;
 const DESIGN_HEIGHT = 1280;
-const CONTAINER_NAME = 'container';
 
 @ccclass('HomeView')
 export class HomeView extends Component {
+    @property({ type: Node })
+    private startButton: Node | null = null;
+
+    @property({ type: Node })
+    private topSettingButton: Node | null = null;
+
     public onStartTap: (() => void) | null = null;
     public onMenuTap: (() => void) | null = null;
     public onSettingsTap: (() => void) | null = null;
 
-    private startButton: Node | null = null;
     private menuButton: Node | null = null;
-    private topSettingButton: Node | null = null;
     private bottomSettingButton: Node | null = null;
 
     private readonly pressedButtons: Set<Node> = new Set();
@@ -81,16 +84,14 @@ export class HomeView extends Component {
     }
 
     private resolveButtons(): void {
-        this.menuButton = this.findRuntimeNode(['TopBar', 'MenuButton']);
-        this.topSettingButton = this.findRuntimeNode(['TopBar', 'TopSettingButton']);
-        this.startButton = this.findRuntimeNode(['ActionGroup', 'StartButton']);
-        this.bottomSettingButton = this.findRuntimeNode(['ActionGroup', 'BottomSettingButton']);
+        this.menuButton = this.findNamedRuntimeNode('MenuButton');
+        this.bottomSettingButton = this.findNamedRuntimeNode('BottomSettingButton');
 
         if (this.startButton) {
             return;
         }
 
-        console.warn('HomeView.resolveButtons: StartButton is missing, home actions will stay unbound.');
+        console.warn('HomeView.resolveButtons: StartButton is not assigned, home start action will stay unbound.');
     }
 
     private bindRuntimeEvents(): void {
@@ -163,21 +164,27 @@ export class HomeView extends Component {
         return true;
     }
 
-    private findRuntimeNode(path: string[]): Node | null {
-        return this.findNode(path) ?? this.findNode([CONTAINER_NAME, ...path]);
+    private findNamedRuntimeNode(nodeName: string): Node | null {
+        return this.findDescendantByName(this.node, nodeName);
     }
 
-    private findNode(path: string[]): Node | null {
-        let currentNode: Node | null = this.node;
+    private findDescendantByName(rootNode: Node | null, nodeName: string): Node | null {
+        if (!rootNode) {
+            return null;
+        }
 
-        for (const name of path) {
-            currentNode = currentNode?.getChildByName(name) ?? null;
+        if (rootNode.name === nodeName) {
+            return rootNode;
+        }
 
-            if (!currentNode) {
-                return null;
+        for (const childNode of rootNode.children) {
+            const matchedNode = this.findDescendantByName(childNode, nodeName);
+
+            if (matchedNode) {
+                return matchedNode;
             }
         }
 
-        return currentNode;
+        return null;
     }
 }

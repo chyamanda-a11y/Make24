@@ -7,6 +7,7 @@ import { ChapterLevelSelection, ChapterView } from '../view/chapter/ChapterView'
 import { GameView } from '../view/game/GameView';
 import { MainUIEnterAnimator } from '../view/game/MainUIEnterAnimator';
 import { HomeView } from '../view/home/HomeView';
+import { SettingPopupView } from '../view/home/SettingPopupView';
 import { AudioUtil } from './AudioUtil';
 import { ChapterLevelConfig, LevelService } from './LevelService';
 import { PageName, PageRouter } from './PageRouter';
@@ -26,6 +27,8 @@ const PAGE_NODE_NAMES = {
     chapter: 'ChapterPage',
     game: 'MainUI',
 } as const;
+
+const SETTINGS_POPUP_PREFAB_PATH = 'prefabs/SettingPopUI';
 
 enum StartupPage {
     Home = 0,
@@ -61,8 +64,10 @@ export class AppController extends Component {
     private homeView: HomeView | null = null;
     private chapterView: ChapterView | null = null;
     private gameView: GameView | null = null;
+    private settingPopupView: SettingPopupView | null = null;
     private readonly prefabTasks: Map<string, Promise<Prefab>> = new Map();
     private pagesInitializationTask: Promise<void> | null = null;
+    private settingPopupInitializationTask: Promise<SettingPopupView> | null = null;
 
     protected onLoad(): void {
         void AudioUtil.Preload().catch((error: unknown) => {
@@ -191,7 +196,7 @@ export class AppController extends Component {
             usableAssignedNode.active = false;
         }
 
-        const prefab = await this.loadPagePrefab(PAGE_PREFAB_PATHS[pageName]);
+        const prefab = await this.loadPrefab(PAGE_PREFAB_PATHS[pageName]);
         const pageNode = instantiate(prefab);
 
         pageNode.name = PAGE_NODE_NAMES[pageName];
@@ -316,7 +321,7 @@ export class AppController extends Component {
         return null;
     }
 
-    private async loadPagePrefab(resourcePath: string): Promise<Prefab> {
+    private async loadPrefab(resourcePath: string): Promise<Prefab> {
         const loadingTask = this.prefabTasks.get(resourcePath);
 
         if (loadingTask) {
@@ -326,12 +331,12 @@ export class AppController extends Component {
         const task = new Promise<Prefab>((resolve, reject) => {
             resources.load(resourcePath, Prefab, (error, asset) => {
                 if (error) {
-                    reject(new Error(`AppController.loadPagePrefab failed for ${resourcePath}: ${error.message}`));
+                    reject(new Error(`AppController.loadPrefab failed for ${resourcePath}: ${error.message}`));
                     return;
                 }
 
                 if (!asset) {
-                    reject(new Error(`AppController.loadPagePrefab failed for ${resourcePath}: prefab asset is missing`));
+                    reject(new Error(`AppController.loadPrefab failed for ${resourcePath}: prefab asset is missing`));
                     return;
                 }
 
@@ -407,6 +412,16 @@ export class AppController extends Component {
         }
     }
 
+    private async openSettingsPopup(): Promise<void> {
+        try {
+            const settingPopupView = await this.ensureSettingPopupView();
+
+            settingPopupView.show();
+        } catch (error) {
+            console.error('AppController.openSettingsPopup failed', error);
+        }
+    }
+
     private async resolveHomeEntrySelection(): Promise<GameEntrySelection> {
         const save = this.saveService.load();
         const chapterIds = this.buildHomeEntryChapterIds(save);
@@ -428,6 +443,7 @@ export class AppController extends Component {
     }
 
     private readonly handleHomeSettingsTap = (): void => {
+        void this.openSettingsPopup();
     };
 
     private readonly handleExitRequested = (): void => {
@@ -480,6 +496,45 @@ export class AppController extends Component {
             chapterFileName: this.chapterController.getChapterFileName(chapterId),
             levelIndex,
         };
+    }
+
+    private async ensureSettingPopupView(): Promise<SettingPopupView> {
+        const existingSettingPopupView = this.settingPopupView;
+
+        if (existingSettingPopupView && isValid(existingSettingPopupView.node, true)) {
+            return existingSettingPopupView;
+        }
+
+        this.settingPopupView = null;
+
+        if (!this.settingPopupInitializationTask) {
+            this.settingPopupInitializationTask = this.initializeSettingPopupView();
+        }
+
+        try {
+            const settingPopupView = await this.settingPopupInitializationTask;
+
+            this.settingPopupView = settingPopupView;
+            return settingPopupView;
+        } finally {
+            this.settingPopupInitializationTask = null;
+        }
+    }
+
+    private async initializeSettingPopupView(): Promise<SettingPopupView> {
+        if (!this.homePage || !isValid(this.homePage, true)) {
+            throw new Error('AppController.initializeSettingPopupView: homePage is missing');
+        }
+
+        const popupPrefab = await this.loadPrefab(SETTINGS_POPUP_PREFAB_PATH);
+        const popupNode = instantiate(popupPrefab);
+
+        popupNode.name = 'SettingPopUI';
+        popupNode.active = false;
+        popupNode.setParent(this.homePage);
+        popupNode.setPosition(0, 0, 0);
+
+        return popupNode.getComponent(SettingPopupView) ?? popupNode.addComponent(SettingPopupView);
     }
 
     private async preparePagesForStartup(startupPageName: PageName): Promise<void> {
