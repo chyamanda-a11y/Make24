@@ -16,11 +16,23 @@ export class AudioUtil {
 
     private static audioRootNode: Node | null = null;
     private static audioSource: AudioSource | null = null;
+    private static isMusicEnabled: boolean = true;
+    private static isSoundEnabled: boolean = true;
 
     public static async Preload(): Promise<void> {
         await Promise.all(
             (Object.keys(AUDIO_RESOURCE_PATHS) as AudioKey[]).map((audioKey) => this.loadAudioClip(audioKey)),
         );
+    }
+
+    public static SetMusicEnabled(enabled: boolean): void {
+        this.isMusicEnabled = enabled;
+        this.syncMusicEnabledState();
+    }
+
+    public static SetSoundEnabled(enabled: boolean): void {
+        this.isSoundEnabled = enabled;
+        this.syncSoundEnabledState();
     }
 
     public static PlayMatch24(): void {
@@ -36,6 +48,10 @@ export class AudioUtil {
     }
 
     private static playAudio(audioKey: AudioKey): void {
+        if (!this.isSoundEnabled) {
+            return;
+        }
+
         const cachedAudioClip = this.audioClipCache.get(audioKey) ?? null;
 
         if (cachedAudioClip) {
@@ -69,6 +85,7 @@ export class AudioUtil {
         audioSource.playOnAwake = false;
         audioSource.loop = false;
         this.audioSource = audioSource;
+        this.syncSoundEnabledState();
         return audioSource;
     }
 
@@ -139,5 +156,24 @@ export class AudioUtil {
         } finally {
             this.audioClipTasks.delete(audioKey);
         }
+    }
+
+    private static syncSoundEnabledState(): void {
+        const audioSource = this.audioSource;
+
+        if (!audioSource || !isValid(audioSource.node, true)) {
+            return;
+        }
+
+        audioSource.volume = this.isSoundEnabled ? 1 : 0;
+
+        if (!this.isSoundEnabled) {
+            audioSource.stop();
+        }
+    }
+
+    private static syncMusicEnabledState(): void {
+        // TODO: Add background music playback control here after music assets are integrated.
+        void this.isMusicEnabled;
     }
 }

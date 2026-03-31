@@ -70,6 +70,7 @@ export class AppController extends Component {
     private settingPopupInitializationTask: Promise<SettingPopupView> | null = null;
 
     protected onLoad(): void {
+        this.applySavedAudioSettings();
         void AudioUtil.Preload().catch((error: unknown) => {
             console.error('AppController.onLoad: AudioUtil.Preload failed', error);
         });
@@ -99,6 +100,13 @@ export class AppController extends Component {
 
     public getWXService(): WXService {
         return this.wxService;
+    }
+
+    private applySavedAudioSettings(): void {
+        const save = this.saveService.load();
+
+        AudioUtil.SetSoundEnabled(save.isSoundEnabled);
+        AudioUtil.SetMusicEnabled(save.isMusicEnabled);
     }
 
     private async initializePages(): Promise<void> {

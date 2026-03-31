@@ -11,6 +11,8 @@ interface RawSaveModel {
     readonly unlockedChapterId?: unknown;
     readonly passedLevelIds?: unknown;
     readonly starsByLevelId?: unknown;
+    readonly isMusicEnabled?: unknown;
+    readonly isSoundEnabled?: unknown;
 }
 
 export class SaveService {
@@ -56,6 +58,8 @@ export class SaveService {
             unlockedChapterId: this.readPositiveInteger(rawSave.unlockedChapterId) ?? DEFAULT_SAVE_MODEL.unlockedChapterId,
             passedLevelIds: this.normalizePassedLevelIds(rawSave.passedLevelIds),
             starsByLevelId: this.normalizeStarsByLevelId(rawSave.starsByLevelId),
+            isMusicEnabled: this.readBooleanValue(rawSave.isMusicEnabled) ?? DEFAULT_SAVE_MODEL.isMusicEnabled,
+            isSoundEnabled: this.readBooleanValue(rawSave.isSoundEnabled) ?? DEFAULT_SAVE_MODEL.isSoundEnabled,
         };
     }
 
@@ -102,6 +106,14 @@ export class SaveService {
 
     private readPositiveInteger(value: unknown): number | null {
         if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+            return null;
+        }
+
+        return value;
+    }
+
+    private readBooleanValue(value: unknown): boolean | null {
+        if (typeof value !== 'boolean') {
             return null;
         }
 
