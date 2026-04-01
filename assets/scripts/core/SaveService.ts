@@ -2,6 +2,11 @@ import { sys } from 'cc';
 
 import { CURRENT_SAVE_VERSION, DEFAULT_SAVE_MODEL, SaveModel } from '../model/common/SaveModel';
 
+/**
+ * 本地存档统一走 {@link sys.localStorage}（Cocos 文档推荐）。
+ * 在微信小游戏中由引擎适配底层存储能力（如 wx 存储），勿在业务中直接调 wx.setStorage。
+ */
+
 const STORAGE_KEY = 'make24.save';
 
 interface RawSaveModel {

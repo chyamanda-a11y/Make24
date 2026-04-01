@@ -8,6 +8,7 @@ import { GameView } from '../view/game/GameView';
 import { MainUIEnterAnimator } from '../view/game/MainUIEnterAnimator';
 import { HomeView } from '../view/home/HomeView';
 import { SettingPopupView } from '../view/home/SettingPopupView';
+import { WechatLoginService } from '../platform/wechat/WechatLoginService';
 import { WechatPrivacyService } from '../platform/wechat/WechatPrivacyService';
 import { AudioUtil } from './AudioUtil';
 import { ChapterLevelConfig, LevelService } from './LevelService';
@@ -72,6 +73,14 @@ export class AppController extends Component {
 
     protected onLoad(): void {
         WechatPrivacyService.registerCustomPrivacyIfWechat();
+        void WechatLoginService.requestLoginCode().then((code) => {
+            if (!code) {
+                return;
+            }
+            console.info(
+                '[WechatLogin] code ready — exchange on server (jscode2session), then WechatLoginService.persistOpenIdFromServer(openid)',
+            );
+        });
         this.applySavedAudioSettings();
         void AudioUtil.Preload().catch((error: unknown) => {
             console.error('AppController.onLoad: AudioUtil.Preload failed', error);
