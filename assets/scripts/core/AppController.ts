@@ -8,6 +8,7 @@ import { GameView } from '../view/game/GameView';
 import { MainUIEnterAnimator } from '../view/game/MainUIEnterAnimator';
 import { HomeView } from '../view/home/HomeView';
 import { SettingPopupView } from '../view/home/SettingPopupView';
+import { WechatPrivacyService } from '../platform/wechat/WechatPrivacyService';
 import { AudioUtil } from './AudioUtil';
 import { ChapterLevelConfig, LevelService } from './LevelService';
 import { PageName, PageRouter } from './PageRouter';
@@ -70,6 +71,7 @@ export class AppController extends Component {
     private settingPopupInitializationTask: Promise<SettingPopupView> | null = null;
 
     protected onLoad(): void {
+        WechatPrivacyService.registerCustomPrivacyIfWechat();
         this.applySavedAudioSettings();
         void AudioUtil.Preload().catch((error: unknown) => {
             console.error('AppController.onLoad: AudioUtil.Preload failed', error);
