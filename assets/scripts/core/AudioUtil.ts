@@ -1,14 +1,28 @@
-import { AudioClip, AudioSource, Node, director, isValid, resources } from 'cc';
+import { AudioClip, AudioSource, Node, director, isValid } from 'cc';
+
+import { BundleAssetLocation, BundleService } from './BundleService';
 
 const AUDIO_ROOT_NODE_NAME = 'AudioUtilRoot';
 
-const AUDIO_RESOURCE_PATHS = {
-    Match24: 'audio/match_24',
-    NormalBtn: 'audio/normal_btn',
-    Success: 'audio/success_3',
+const AUDIO_RESOURCE_LOCATIONS = {
+    Match24: {
+        bundleName: 'game',
+        assetPath: 'audio/match_24',
+    },
+    NormalBtn: {
+        bundleName: 'resources',
+        assetPath: 'audio/normal_btn',
+    },
+    Success: {
+        bundleName: 'game',
+        assetPath: 'audio/success_3',
+    },
 } as const;
 
-type AudioKey = keyof typeof AUDIO_RESOURCE_PATHS;
+const STARTUP_AUDIO_KEYS = ['NormalBtn'] as const;
+const GAMEPLAY_AUDIO_KEYS = ['Match24', 'Success'] as const;
+
+type AudioKey = keyof typeof AUDIO_RESOURCE_LOCATIONS;
 
 export class AudioUtil {
     private static readonly audioClipCache: Map<AudioKey, AudioClip> = new Map();
@@ -19,10 +33,14 @@ export class AudioUtil {
     private static isMusicEnabled: boolean = true;
     private static isSoundEnabled: boolean = true;
 
-    public static async Preload(): Promise<void> {
+    public static async Preload(audioKeys: readonly AudioKey[] = STARTUP_AUDIO_KEYS): Promise<void> {
         await Promise.all(
-            (Object.keys(AUDIO_RESOURCE_PATHS) as AudioKey[]).map((audioKey) => this.loadAudioClip(audioKey)),
+            audioKeys.map((audioKey) => this.loadAudioClip(audioKey)),
         );
+    }
+
+    public static async PreloadGameplay(): Promise<void> {
+        await this.Preload(GAMEPLAY_AUDIO_KEYS);
     }
 
     public static SetMusicEnabled(enabled: boolean): void {
@@ -130,21 +148,7 @@ export class AudioUtil {
             return loadingTask;
         }
 
-        const task = new Promise<AudioClip>((resolve, reject) => {
-            resources.load(AUDIO_RESOURCE_PATHS[audioKey], AudioClip, (error, asset) => {
-                if (error) {
-                    reject(new Error(`AudioUtil.loadAudioClip failed for ${audioKey}: ${error.message}`));
-                    return;
-                }
-
-                if (!asset) {
-                    reject(new Error(`AudioUtil.loadAudioClip failed for ${audioKey}: audio clip is missing`));
-                    return;
-                }
-
-                resolve(asset);
-            });
-        });
+        const task = BundleService.loadAsset(AUDIO_RESOURCE_LOCATIONS[audioKey] as BundleAssetLocation, AudioClip);
 
         this.audioClipTasks.set(audioKey, task);
 

@@ -7,7 +7,7 @@ const {
     getPhaseMatchReasons,
 } = require('./level-analysis');
 
-const OUTPUT_DIR = path.resolve(__dirname, '../../assets/resources/config/levels');
+const OUTPUT_DIR = path.resolve(__dirname, '../../assets/levels/config/levels');
 const CHAPTER_DEFINITIONS = [
     {
         chapterId: 1,

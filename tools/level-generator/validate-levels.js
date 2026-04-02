@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { GOAL_VALUE, analyzeLevel, createNumbersKey } = require('./level-analysis');
 
-const CONFIG_DIR = path.resolve(__dirname, '../../assets/resources/config/levels');
+const CONFIG_DIR = path.resolve(__dirname, '../../assets/levels/config/levels');
 const CONFIG_FILES = ['chapter_01.json', 'chapter_02.json', 'chapter_03.json'];
 const DOMINANT_VALIDATION_CHAPTER_IDS = new Set([1, 2, 3]);
 const STRUCTURED_CHAPTER_RULES = {

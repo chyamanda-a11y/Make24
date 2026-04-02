@@ -1,5 +1,6 @@
-import { JsonAsset, resources } from 'cc';
+import { JsonAsset } from 'cc';
 
+import { BundleService } from './BundleService';
 import { LevelDifficulty, LevelEstimatedSteps, LevelModel } from '../model/game/LevelModel';
 
 export interface ChapterLevelConfig {
@@ -48,24 +49,19 @@ export class LevelService {
             return loadingTask;
         }
 
-        const task = new Promise<ChapterLevelConfig>((resolve, reject) => {
-            resources.load(`config/levels/${chapterFileName}`, JsonAsset, (error, asset) => {
-                if (error) {
-                    reject(new Error(`LevelService.loadChapterConfig failed: ${error.message}`));
-                    return;
-                }
+        const task = (async (): Promise<ChapterLevelConfig> => {
+            const asset = await BundleService.loadAsset(
+                {
+                    bundleName: 'levels',
+                    assetPath: `config/levels/${chapterFileName}`,
+                },
+                JsonAsset,
+            );
+            const config = this.normalizeChapterConfig(asset.json);
 
-                if (!asset) {
-                    reject(new Error('LevelService.loadChapterConfig failed: json asset is missing'));
-                    return;
-                }
-
-                const config = this.normalizeChapterConfig(asset.json);
-
-                LevelService.configCache.set(chapterFileName, config);
-                resolve(config);
-            });
-        });
+            LevelService.configCache.set(chapterFileName, config);
+            return config;
+        })();
 
         LevelService.configTasks.set(chapterFileName, task);
 

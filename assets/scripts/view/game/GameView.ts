@@ -1,7 +1,8 @@
-import { _decorator, BlockInputEvents, Button, Component, EventTouch, Label, Node, Prefab, Tween, UITransform, Widget, instantiate, resources, tween, Vec3 } from 'cc';
+import { _decorator, BlockInputEvents, Button, Component, EventTouch, Label, Node, Prefab, Tween, UITransform, Widget, instantiate, tween, Vec3 } from 'cc';
 
 import { GameController } from '../../controller/game/GameController';
 import { AudioUtil } from '../../core/AudioUtil';
+import { BundleAssetLocation, BundleService } from '../../core/BundleService';
 import { LevelService } from '../../core/LevelService';
 import { LevelModel } from '../../model/game/LevelModel';
 import { AnswerPopupView } from './AnswerPopupView';
@@ -18,8 +19,14 @@ const FALLBACK_LEVEL: LevelModel = {
     answerExpression: '(6*2)*(6/2)',
 };
 
-const ANSWER_POPUP_PREFAB_PATH = 'prefabs/AnswerPopUI';
-const RESULT_POPUP_PREFAB_PATH = 'prefabs/ResultPupUI';
+const ANSWER_POPUP_PREFAB_LOCATION: BundleAssetLocation = {
+    bundleName: 'game',
+    assetPath: 'prefabs/AnswerPopUI',
+};
+const RESULT_POPUP_PREFAB_LOCATION: BundleAssetLocation = {
+    bundleName: 'game',
+    assetPath: 'prefabs/ResultPupUI',
+};
 const CONTROL_BUTTON_PRESS_SCALE = 0.94;
 const CONTROL_BUTTON_PRESS_DURATION = 0.08;
 const CONTROL_BUTTON_RELEASE_DURATION = 0.1;
@@ -205,8 +212,8 @@ export class GameView extends Component {
 
     private async initializePopupViews(): Promise<void> {
         const [answerPopupPrefab, resultPopupPrefab] = await Promise.all([
-            this.loadPrefab(ANSWER_POPUP_PREFAB_PATH),
-            this.loadPrefab(RESULT_POPUP_PREFAB_PATH),
+            this.loadPrefab(ANSWER_POPUP_PREFAB_LOCATION),
+            this.loadPrefab(RESULT_POPUP_PREFAB_LOCATION),
         ]);
 
         const answerPopupNode = instantiate(answerPopupPrefab);
@@ -233,22 +240,8 @@ export class GameView extends Component {
         this.hideTransientPopups();
     }
 
-    private async loadPrefab(resourcePath: string): Promise<Prefab> {
-        return await new Promise<Prefab>((resolve, reject) => {
-            resources.load(resourcePath, Prefab, (error, asset) => {
-                if (error) {
-                    reject(new Error(`GameView.loadPrefab failed: ${error.message}`));
-                    return;
-                }
-
-                if (!asset) {
-                    reject(new Error(`GameView.loadPrefab failed: prefab ${resourcePath} is missing`));
-                    return;
-                }
-
-                resolve(asset);
-            });
-        });
+    private async loadPrefab(prefabLocation: BundleAssetLocation): Promise<Prefab> {
+        return BundleService.loadAsset(prefabLocation, Prefab);
     }
 
     private startLevelByIndex(index: number, notifyLevelStarted: boolean = true): void {

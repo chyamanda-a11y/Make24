@@ -1,4 +1,4 @@
-import { _decorator, Component, director, Enum, instantiate, isValid, Node, Prefab, resources } from 'cc';
+import { _decorator, Component, director, Enum, instantiate, isValid, Node, Prefab } from 'cc';
 
 import { ChapterController } from '../controller/chapter/ChapterController';
 import { SaveModel } from '../model/common/SaveModel';
@@ -10,7 +10,9 @@ import { HomeView } from '../view/home/HomeView';
 import { SettingPopupView } from '../view/home/SettingPopupView';
 import { WechatLoginService } from '../platform/wechat/WechatLoginService';
 import { WechatPrivacyService } from '../platform/wechat/WechatPrivacyService';
+import { WechatUpdateService } from '../platform/wechat/WechatUpdateService';
 import { AudioUtil } from './AudioUtil';
+import { BundleAssetLocation, BundleService } from './BundleService';
 import { ChapterLevelConfig, LevelService } from './LevelService';
 import { PageName, PageRouter } from './PageRouter';
 import { SaveService } from './SaveService';
@@ -18,11 +20,20 @@ import { WXService } from './WXService';
 
 const { ccclass, property } = _decorator;
 
-const PAGE_PREFAB_PATHS = {
-    home: 'prefabs/HomePage',
-    chapter: 'prefabs/ChapterPage',
-    game: 'prefabs/MainUI',
-} as const;
+const PAGE_PREFAB_LOCATIONS: Record<PageName, BundleAssetLocation> = {
+    home: {
+        bundleName: 'resources',
+        assetPath: 'prefabs/HomePage',
+    },
+    chapter: {
+        bundleName: 'chapter',
+        assetPath: 'prefabs/ChapterPage',
+    },
+    game: {
+        bundleName: 'game',
+        assetPath: 'prefabs/MainUI',
+    },
+};
 
 const PAGE_NODE_NAMES = {
     home: 'HomePage',
@@ -30,7 +41,10 @@ const PAGE_NODE_NAMES = {
     game: 'MainUI',
 } as const;
 
-const SETTINGS_POPUP_PREFAB_PATH = 'prefabs/SettingPopUI';
+const SETTINGS_POPUP_PREFAB_LOCATION: BundleAssetLocation = {
+    bundleName: 'resources',
+    assetPath: 'prefabs/SettingPopUI',
+};
 
 enum StartupPage {
     Home = 0,
@@ -67,12 +81,13 @@ export class AppController extends Component {
     private chapterView: ChapterView | null = null;
     private gameView: GameView | null = null;
     private settingPopupView: SettingPopupView | null = null;
-    private readonly prefabTasks: Map<string, Promise<Prefab>> = new Map();
+    private readonly pageInitializationTasks: Map<PageName, Promise<Node>> = new Map();
     private pagesInitializationTask: Promise<void> | null = null;
     private settingPopupInitializationTask: Promise<SettingPopupView> | null = null;
 
     protected onLoad(): void {
         WechatPrivacyService.registerCustomPrivacyIfWechat();
+        WechatUpdateService.registerUpdateManagerIfWechat();
         void WechatLoginService.requestLoginCode().then((code) => {
             if (!code) {
                 return;
@@ -89,7 +104,6 @@ export class AppController extends Component {
         this.chapterPage = this.getUsableAssignedNode(this.chapterPage);
         this.gamePage = this.getUsableAssignedNode(this.gamePage);
         this.applyStartupPageVisibility(this.homePage, this.chapterPage, this.gamePage);
-        this.registerStartupPageIfAvailable();
         this.bindHomeViewIfAvailable();
         this.pagesInitializationTask = this.initializePages();
         void this.pagesInitializationTask.catch((error: unknown) => {
@@ -122,26 +136,7 @@ export class AppController extends Component {
 
     private async initializePages(): Promise<void> {
         const startupPageName = this.getStartupPageName();
-        const startupPageNode = await this.resolvePageNode(startupPageName, this.getAssignedPageNode(startupPageName));
-
-        this.setPageNode(startupPageName, startupPageNode);
-        this.pageRouter.register(startupPageName, startupPageNode);
-
-        const remainingPageNames = (Object.keys(PAGE_PREFAB_PATHS) as PageName[]).filter(
-            (pageName) => pageName !== startupPageName,
-        );
-
-        const remainingPageNodes = await Promise.all(
-            remainingPageNames.map((pageName) => this.resolvePageNode(pageName, this.getAssignedPageNode(pageName))),
-        );
-
-        remainingPageNames.forEach((pageName, index) => {
-            this.setPageNode(pageName, remainingPageNodes[index]);
-        });
-
-        this.applyStartupPageVisibility(this.homePage, this.chapterPage, this.gamePage);
-        this.bindViews();
-        this.registerPages();
+        await this.ensurePageReady(startupPageName);
         await this.preparePagesForStartup(startupPageName);
         this.openPage(startupPageName);
 
@@ -151,53 +146,98 @@ export class AppController extends Component {
     }
 
     private bindHomeViewIfAvailable(): void {
-        if (!this.homePage) {
+        const homePage = this.getUsableAssignedNode(this.homePage);
+
+        if (!homePage) {
             return;
         }
 
-        this.homeView = this.homePage.getComponent(HomeView) ?? this.homePage.addComponent(HomeView);
-        this.homeView.onStartTap = this.handleHomeStartTap;
-        this.homeView.onMenuTap = this.handleHomeMenuTap;
-        this.homeView.onSettingsTap = this.handleHomeSettingsTap;
+        this.bindPageView('home', homePage);
     }
 
-    private bindViews(): void {
-        if (!this.homePage || !this.chapterPage || !this.gamePage) {
-            throw new Error('AppController.bindViews: page nodes are missing');
+    private async ensurePageReady(pageName: PageName): Promise<Node> {
+        const existingPageNode = this.getUsableAssignedNode(this.getAssignedPageNode(pageName));
+
+        if (existingPageNode) {
+            this.pageRouter.register(pageName, existingPageNode);
+            this.bindPageView(pageName, existingPageNode);
+            return existingPageNode;
         }
 
-        this.homeView = this.homePage.getComponent(HomeView) ?? this.homePage.addComponent(HomeView);
-        this.chapterView = this.chapterPage.getComponent(ChapterView);
-        this.gameView = this.gamePage.getComponent(GameView);
+        const loadingTask = this.pageInitializationTasks.get(pageName);
 
-        if (!this.chapterView) {
-            throw new Error('AppController.bindViews: chapterPage is missing ChapterView');
+        if (loadingTask) {
+            return loadingTask;
         }
 
-        if (!this.gameView) {
-            throw new Error('AppController.bindViews: gamePage is missing GameView');
+        const task = this.initializePageNode(pageName);
+
+        this.pageInitializationTasks.set(pageName, task);
+
+        try {
+            return await task;
+        } finally {
+            this.pageInitializationTasks.delete(pageName);
         }
-
-        this.gamePage.getComponent(MainUIEnterAnimator) ?? this.gamePage.addComponent(MainUIEnterAnimator);
-
-        this.homeView.onStartTap = this.handleHomeStartTap;
-        this.homeView.onMenuTap = this.handleHomeMenuTap;
-        this.homeView.onSettingsTap = this.handleHomeSettingsTap;
-
-        this.chapterView.onLevelSelected = this.handleLevelSelected;
-        this.gameView.onLevelStarted = this.handleLevelStarted;
-        this.gameView.onLevelCompleted = this.handleLevelCompleted;
-        this.gameView.onExitRequested = this.handleExitRequested;
     }
 
-    private registerPages(): void {
-        if (!this.homePage || !this.chapterPage || !this.gamePage) {
-            throw new Error('AppController.registerPages: page nodes are missing');
+    private async initializePageNode(pageName: PageName): Promise<Node> {
+        const pageNode = await this.resolvePageNode(pageName, this.getAssignedPageNode(pageName));
+
+        this.setPageNode(pageName, pageNode);
+        this.pageRouter.register(pageName, pageNode);
+        this.bindPageView(pageName, pageNode);
+        return pageNode;
+    }
+
+    private bindPageView(pageName: PageName, pageNode: Node): void {
+        switch (pageName) {
+            case 'home':
+                this.bindHomeView(pageNode);
+                return;
+            case 'chapter':
+                this.bindChapterView(pageNode);
+                return;
+            case 'game':
+                this.bindGameView(pageNode);
+                return;
+            default:
+                throw new Error(`AppController.bindPageView: unsupported pageName ${String(pageName)}`);
+        }
+    }
+
+    private bindHomeView(pageNode: Node): void {
+        const homeView = pageNode.getComponent(HomeView) ?? pageNode.addComponent(HomeView);
+
+        homeView.onStartTap = this.handleHomeStartTap;
+        homeView.onMenuTap = this.handleHomeMenuTap;
+        homeView.onSettingsTap = this.handleHomeSettingsTap;
+        this.homeView = homeView;
+    }
+
+    private bindChapterView(pageNode: Node): void {
+        const chapterView = pageNode.getComponent(ChapterView);
+
+        if (!chapterView) {
+            throw new Error('AppController.bindChapterView: chapterPage is missing ChapterView');
         }
 
-        this.pageRouter.register('home', this.homePage);
-        this.pageRouter.register('chapter', this.chapterPage);
-        this.pageRouter.register('game', this.gamePage);
+        chapterView.onLevelSelected = this.handleLevelSelected;
+        this.chapterView = chapterView;
+    }
+
+    private bindGameView(pageNode: Node): void {
+        const gameView = pageNode.getComponent(GameView);
+
+        if (!gameView) {
+            throw new Error('AppController.bindGameView: gamePage is missing GameView');
+        }
+
+        pageNode.getComponent(MainUIEnterAnimator) ?? pageNode.addComponent(MainUIEnterAnimator);
+        gameView.onLevelStarted = this.handleLevelStarted;
+        gameView.onLevelCompleted = this.handleLevelCompleted;
+        gameView.onExitRequested = this.handleExitRequested;
+        this.gameView = gameView;
     }
 
     private async resolvePageNode(pageName: PageName, assignedNode: Node | null): Promise<Node> {
@@ -215,7 +255,7 @@ export class AppController extends Component {
             usableAssignedNode.active = false;
         }
 
-        const prefab = await this.loadPrefab(PAGE_PREFAB_PATHS[pageName]);
+        const prefab = await this.loadPrefab(PAGE_PREFAB_LOCATIONS[pageName]);
         const pageNode = instantiate(prefab);
 
         pageNode.name = PAGE_NODE_NAMES[pageName];
@@ -248,23 +288,6 @@ export class AppController extends Component {
             default:
                 throw new Error(`AppController.getStartupPageName: unsupported startupPage ${this.startupPage}`);
         }
-    }
-
-    private registerStartupPageIfAvailable(): void {
-        const startupPageName = this.getStartupPageName();
-
-        if (startupPageName !== 'home') {
-            return;
-        }
-
-        const startupPageNode = this.getAssignedPageNode(startupPageName);
-
-        if (!startupPageNode) {
-            return;
-        }
-
-        this.pageRouter.register(startupPageName, startupPageNode);
-        this.pageRouter.show(startupPageName);
     }
 
     private getAssignedPageNode(pageName: PageName): Node | null {
@@ -340,36 +363,8 @@ export class AppController extends Component {
         return null;
     }
 
-    private async loadPrefab(resourcePath: string): Promise<Prefab> {
-        const loadingTask = this.prefabTasks.get(resourcePath);
-
-        if (loadingTask) {
-            return loadingTask;
-        }
-
-        const task = new Promise<Prefab>((resolve, reject) => {
-            resources.load(resourcePath, Prefab, (error, asset) => {
-                if (error) {
-                    reject(new Error(`AppController.loadPrefab failed for ${resourcePath}: ${error.message}`));
-                    return;
-                }
-
-                if (!asset) {
-                    reject(new Error(`AppController.loadPrefab failed for ${resourcePath}: prefab asset is missing`));
-                    return;
-                }
-
-                resolve(asset);
-            });
-        });
-
-        this.prefabTasks.set(resourcePath, task);
-
-        try {
-            return await task;
-        } finally {
-            this.prefabTasks.delete(resourcePath);
-        }
+    private async loadPrefab(prefabLocation: BundleAssetLocation): Promise<Prefab> {
+        return BundleService.loadAsset(prefabLocation, Prefab);
     }
 
     private readonly handleLevelSelected = (selection: ChapterLevelSelection): void => {
@@ -545,7 +540,7 @@ export class AppController extends Component {
             throw new Error('AppController.initializeSettingPopupView: homePage is missing');
         }
 
-        const popupPrefab = await this.loadPrefab(SETTINGS_POPUP_PREFAB_PATH);
+        const popupPrefab = await this.loadPrefab(SETTINGS_POPUP_PREFAB_LOCATION);
         const popupNode = instantiate(popupPrefab);
 
         popupNode.name = 'SettingPopUI';
@@ -558,15 +553,8 @@ export class AppController extends Component {
 
     private async preparePagesForStartup(startupPageName: PageName): Promise<void> {
         switch (startupPageName) {
-            case 'home': {
-                const selection = await this.resolveHomeEntrySelection();
-
-                await Promise.all([
-                    this.prepareChapterView(),
-                    this.prepareGameView(selection.chapterFileName, selection.levelIndex),
-                ]);
+            case 'home':
                 return;
-            }
             case 'chapter':
                 await this.prepareChapterView();
                 return;
@@ -606,14 +594,21 @@ export class AppController extends Component {
         levelIndex: number,
         notifyLevelStarted: boolean = false,
     ): Promise<void> {
+        await this.ensurePageReady('game');
+
         if (!this.gameView) {
             throw new Error('AppController.prepareGameView: gameView is missing');
         }
 
+        void AudioUtil.PreloadGameplay().catch((error: unknown) => {
+            console.error('AppController.prepareGameView: AudioUtil.PreloadGameplay failed', error);
+        });
         await this.gameView.prepareLevel(chapterFileName, levelIndex, notifyLevelStarted);
     }
 
     private async prepareChapterView(chapterId?: number): Promise<void> {
+        await this.ensurePageReady('chapter');
+
         if (!this.chapterView) {
             throw new Error('AppController.prepareChapterView: chapterView is missing');
         }
