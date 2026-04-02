@@ -589,7 +589,7 @@
     "_string": "01",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 71,
+    "_actualFontSize": 59,
     "_fontSize": 58,
     "_fontFamily": "Arial",
     "_lineHeight": 58,
@@ -881,7 +881,7 @@
       "b": 33,
       "a": 255
     },
-    "_string": "PLAY",
+    "_string": "开始",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
