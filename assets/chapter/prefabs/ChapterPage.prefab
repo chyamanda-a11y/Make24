@@ -570,10 +570,10 @@
       "b": 12,
       "a": 255
     },
-    "_string": "Junior",
+    "_string": "初级",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 25,
+    "_actualFontSize": 21,
     "_fontSize": 20,
     "_fontFamily": "Arial",
     "_lineHeight": 20,
@@ -1099,10 +1099,10 @@
       "b": 114,
       "a": 255
     },
-    "_string": "Middle",
+    "_string": "中级",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 25,
+    "_actualFontSize": 21,
     "_fontSize": 20,
     "_fontFamily": "Arial",
     "_lineHeight": 20,
@@ -1628,10 +1628,10 @@
       "b": 114,
       "a": 255
     },
-    "_string": "Senior",
+    "_string": "高级",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 25,
+    "_actualFontSize": 21,
     "_fontSize": 20,
     "_fontFamily": "Arial",
     "_lineHeight": 20,
@@ -1914,10 +1914,10 @@
       "b": 102,
       "a": 255
     },
-    "_string": "CURRENT PROGRESS",
+    "_string": "当前进度",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 20,
+    "_actualFontSize": 17,
     "_fontSize": 16,
     "_fontFamily": "Arial",
     "_lineHeight": 16,
@@ -2076,7 +2076,7 @@
     "_string": "6/20",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 66,
+    "_actualFontSize": 55,
     "_fontSize": 54,
     "_fontFamily": "Arial",
     "_lineHeight": 54,
@@ -2141,7 +2141,7 @@
       "__id__": 1
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 87
@@ -2235,7 +2235,7 @@
     "_string": "Cleared",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 29,
+    "_actualFontSize": 25,
     "_fontSize": 24,
     "_fontFamily": "Arial",
     "_lineHeight": 24,
