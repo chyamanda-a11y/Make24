@@ -10,6 +10,7 @@ import { HomeView } from '../view/home/HomeView';
 import { SettingPopupView } from '../view/home/SettingPopupView';
 import { WechatLoginService } from '../platform/wechat/WechatLoginService';
 import { WechatPrivacyService } from '../platform/wechat/WechatPrivacyService';
+import { WechatShareContent, WechatShareService } from '../platform/wechat/WechatShareService';
 import { WechatUpdateService } from '../platform/wechat/WechatUpdateService';
 import { AudioUtil } from './AudioUtil';
 import { BundleAssetLocation, BundleService } from './BundleService';
@@ -88,6 +89,8 @@ export class AppController extends Component {
     protected onLoad(): void {
         WechatPrivacyService.registerCustomPrivacyIfWechat();
         WechatUpdateService.registerUpdateManagerIfWechat();
+        WechatShareService.setShareContentProvider(this.buildWechatShareContent);
+        WechatShareService.registerShareMenuIfWechat();
         void WechatLoginService.requestLoginCode().then((code) => {
             if (!code) {
                 return;
@@ -460,9 +463,32 @@ export class AppController extends Component {
         void this.openSettingsPopup();
     };
 
+    private readonly buildWechatShareContent = (): WechatShareContent => {
+        const save = this.saveService.load();
+        const normalizedChapterId = this.chapterController.normalizeChapterId(save.currentChapterId);
+        const chapterTitle = this.chapterController
+            .getChapterTabs()
+            .find((tab) => tab.chapterId === normalizedChapterId)
+            ?.title ?? '初级';
+        const displayLevelNumber = this.resolveShareLevelNumber(save.currentLevelId);
+
+        return {
+            title: `我在 24 点 ${chapterTitle} 第 ${displayLevelNumber} 关等你，来挑战一下？`,
+            query: `chapter=${normalizedChapterId}&level=${displayLevelNumber}&source=wechat-share`,
+        };
+    };
+
     private readonly handleExitRequested = (): void => {
         void this.openPreparedChapter('handleExitRequested');
     };
+
+    private resolveShareLevelNumber(levelId: number): number {
+        if (levelId >= 100) {
+            return Math.max(levelId % 100, 1);
+        }
+
+        return Math.max(levelId, 1);
+    }
 
     private persistCurrentEntry(chapterId: number, levelId: number): void {
         const save = this.saveService.load();
